@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiefziehen – Wanddickenverlauf & Ausdünnungssimulation</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="header-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      <h1>Tiefziehen – Wanddickenänderung & Einschnürung</h1>
+      <span class="badge-topic">DIN 8584 / Plastizitätstheorie</span>
+    </div>
+
+    <div id="status-pill" class="status-pill good">
+      <span class="status-dot"></span>
+      <span id="status-text">Optimaler Umformbereich</span>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main>
+    <!-- Left Column: Controls and Geometry Configuration -->
+    <aside class="control-panel">
+      <!-- Stempelhub Playback Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>Stempelweg (Ziehhub)</span>
+          <span id="stroke-val" class="control-value">0% (0.0 mm)</span>
+        </div>
+
+        <div class="control-group">
+          <input type="range" id="stroke-slider" min="0" max="100" value="0">
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-play" class="primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Animation starten
+          </button>
+          <button id="btn-reset">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Zurücksetzen
+          </button>
+        </div>
+      </div>
+
+      <!-- Parameter Card -->
+      <div class="card">
+        <div class="card-title">Werkstoff & Werkzeuggeometrie</div>
+
+        <!-- Material -->
+        <div class="control-group">
+          <label class="control-label" for="select-material">Werkstoff</label>
+          <select id="select-material">
+            <option value="dc01" selected>DC01 (St 12, Tiefziehstahl)</option>
+            <option value="dc04">DC04 (Sonder-Tiefziehstahl)</option>
+            <option value="al995">EN AW-Al 99,5 (Reinaluminium)</option>
+            <option value="cu_etp">Kupfer Cu-ETP (weich)</option>
+            <option value="inox">Edelstahl 1.4301 (V2A)</option>
+          </select>
+        </div>
+
+        <!-- Initial Thickness s0 -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Ausgangsblechdicke s₀</span>
+            <span id="val-s0" class="control-value">1.0 mm</span>
+          </div>
+          <input type="range" id="slider-s0" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Drawing Ratio Beta -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Ziehverhältnis β = D₀ / d</span>
+            <span id="val-beta" class="control-value">2.00</span>
+          </div>
+          <input type="range" id="slider-beta" min="1.40" max="2.35" step="0.05" value="2.00">
+        </div>
+
+        <!-- Punch Diameter dp -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Stempeldurchmesser d</span>
+            <span id="val-dp" class="control-value">50 mm</span>
+          </div>
+          <input type="range" id="slider-dp" min="30" max="80" step="5" value="50">
+        </div>
+
+        <!-- Punch Corner Radius rp (Critical for thinning!) -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Stempelkantenradius r_p (Bodenradius)</span>
+            <span id="val-rp" class="control-value">5.0 mm</span>
+          </div>
+          <input type="range" id="slider-rp" min="1.5" max="15.0" step="0.5" value="5.0">
+        </div>
+
+        <!-- Die Radius rd -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Ziehringradius r_d</span>
+            <span id="val-rd" class="control-value">6.0 mm</span>
+          </div>
+          <input type="range" id="slider-rd" min="3.0" max="15.0" step="0.5" value="6.0">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Area: Visualizations, Metrics, and Analysis -->
+    <section class="vis-container">
+      <!-- Live Telemetry Metrics Row -->
+      <div class="metrics-row">
+        <!-- Min Thickness (Thinning) -->
+        <div class="metric-card">
+          <span class="metric-label">Minimale Wanddicke s_min</span>
+          <span id="metric-smin" class="metric-value">1.00 mm</span>
+          <div class="metric-sub success">
+            <span id="metric-smin-delta">±0.0%</span>
+            <span style="margin-left: 4px; color: var(--muted-foreground);" id="metric-smin-loc">Ausgangszustand</span>
+          </div>
+        </div>
+
+        <!-- Max Thickness (Thickening) -->
+        <div class="metric-card">
+          <span class="metric-label">Maximale Wanddicke s_max</span>
+          <span id="metric-smax" class="metric-value">1.00 mm</span>
+          <div class="metric-sub success">
+            <span id="metric-smax-delta">±0.0%</span>
+            <span style="margin-left: 4px; color: var(--muted-foreground);" id="metric-smax-loc">Ausgangszustand</span>
+          </div>
+        </div>
+
+        <!-- Drawing Force -->
+        <div class="metric-card">
+          <span class="metric-label">Aktuelle Ziehkraft F_zieh</span>
+          <span id="metric-fdraw" class="metric-value">0.0 kN</span>
+          <div class="metric-sub">
+            <span>Siebel-Gleichung (inkl. Reibung)</span>
+          </div>
+        </div>
+
+        <!-- Current Depth -->
+        <div class="metric-card">
+          <span class="metric-label">Aktuelle Ziehtiefe h</span>
+          <span id="metric-stroke" class="metric-value">0.0 mm</span>
+          <div class="metric-sub">
+            <span id="metric-stroke-sub">von max. 37.5 mm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side-by-side Viewports (2D Tool Schnitt & 3D Revolved Cup) -->
+      <div class="viewports-grid">
+        <!-- 2D Tool Cross Section Viewport -->
+        <div class="viewport-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="12" y1="3" x2="12" y2="21"/>
+              </svg>
+              <span>2D Werkzeug-Schnitt & Blechverformung</span>
+            </div>
+            <div class="panel-actions">
+              <span class="badge-topic">Hover zum Messen</span>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="canvas2d"></canvas>
+
+            <!-- Real-time Inspection Tooltip -->
+            <div id="inspect-overlay" class="inspection-overlay" style="display: none;">
+              <div>Pos X: <span id="insp-x">0.0 mm</span></div>
+              <div>Dicke s: <span id="insp-s">1.00 mm</span> (<span id="insp-delta">0%</span>)</div>
+              <div>Bereich: <span id="insp-zone" style="color: var(--primary);">Boden</span></div>
+            </div>
+
+            <!-- Colormap Legend -->
+            <div class="colormap-legend">
+              <div class="colormap-labels">
+                <span>Ausdünnung / Rissgefahr (&lt; 80%)</span>
+                <span>s₀ = 100% (Nominal)</span>
+                <span>Verdickung / Stauchung (&gt; 120%)</span>
+              </div>
+              <div class="colormap-bar"></div>
+              <div class="colormap-notes">
+                <span>Kritisch (Stempelkante)</span>
+                <span>Bodenbereich</span>
+                <span>Zylinderrand / Flansch</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D Revolved Cup Viewport -->
+        <div class="viewport-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <span>3D Bauteil-Schnitt (Wandstärken-Heatmap)</span>
+            </div>
+            <div class="panel-actions">
+              <span class="badge-topic">Drehen: Maus links | Zoom: Rad</span>
+            </div>
+          </div>
+
+          <div id="canvas3d-container" class="canvas-wrapper"></div>
+        </div>
+      </div>
+
+      <!-- Live Wall Thickness Profile Chart Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>Wanddickenverteilung s(l) über die abgewickelte Konturlänge</span>
+          </div>
+          <span class="badge-topic">Einschnürungs-Dip an Stempelkante vs. Zunahme am Rand</span>
+        </div>
+
+        <div class="chart-canvas-container">
+          <canvas id="chart-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Scientific & Practical Explanation Grid -->
+      <div class="explanation-grid">
+        <!-- Zone 1: Stempelkante / Bodenrundung -->
+        <div class="expl-card">
+          <span class="expl-badge thinning">Zone 1 · Stempelkante (r_p)</span>
+          <div class="expl-title">Starke Ausdünnung & Bodenreißer</div>
+          <div class="expl-text">
+            Hier überträgt das Blech die <strong>gesamte Ziehkraft</strong> zur Umformung des Flansches unter hoher Radialzugspannung &sigma;<sub>r</sub>. Zusammen mit der plastischen Biegung über den Stempelradius entsteht ein biaxialer Zugspannungszustand, der die Blechdicke <strong>massiv einschnürt (bis zu -25%)</strong>. Bei zu kleinem Radius (r<sub>p</sub> &lt; 3·s₀) reißt der Boden ab.
+          </div>
+        </div>
+
+        <!-- Zone 2: Boden -->
+        <div class="expl-card">
+          <span class="expl-badge neutral">Zone 2 · Bodenbereich</span>
+          <div class="expl-title">Nahezu konstante Dicke s &approx; s₀</div>
+          <div class="expl-text">
+            Der ebene Boden liegt fest auf der Stempelstirnfläche auf. Durch die hohe Reibung zwischen Blech und Stempel wird das Ausdehnen in radialer Richtung behindert. Das Material erfährt kaum plastische Verformung, weshalb die Dicke <strong>nahezu der Ausgangsdicke s₀ (ca. 98–100%)</strong> entspricht.
+          </div>
+        </div>
+
+        <!-- Zone 3: Rand / Flansch -->
+        <div class="expl-card">
+          <span class="expl-badge thickening">Zone 3 · Flansch & Zylinderrand</span>
+          <div class="expl-title">Materialstauchung & Wandverdickung</div>
+          <div class="expl-text">
+            Beim Einziehen des Blechs verkleinert sich der Umfang drastisch. Es herrschen enorme <strong>tangentiale Druckspannungen (&sigma;<sub>t</sub> &lt; 0)</strong>. Nach dem Gesetz der Volumenkonstanz muss das gestauchte Material nach oben und unten ausweichen: <strong>Das Blech wird am oberen Rand dicker (+15% bis +30%)</strong>. Daher muss der Ziehspalt w &gt; s₀ gewählt werden!
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Local Libraries with CDN fallback -->
+  <script src="lib/three.min.js"></script>
+  <script src="lib/OrbitControls.js"></script>
+
+  <!-- Application Modules -->
+  <script src="simulation.js"></script>
+  <script src="view2d.js"></script>
+  <script src="view3d.js"></script>
+  <script src="chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
