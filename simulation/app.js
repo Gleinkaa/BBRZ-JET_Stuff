@@ -251,4 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial state: Start at 0% stroke with a flat plate (Blechronde)
   sim.setStrokeProgress(0.0);
   updateAll();
+
+  // Auto-start simulation playback shortly after initial display
+  setTimeout(() => {
+    startPlayback();
+  }, 750);
 });
