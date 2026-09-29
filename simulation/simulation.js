@@ -60,7 +60,7 @@ class DeepDrawingSimulation {
     this.dp = options.dp || 50.0;           // Punch diameter (mm)
     this.rp = options.rp || 5.0;            // Punch corner radius (mm)
     this.rd = options.rd || 6.0;            // Die shoulder radius (mm)
-    this.clearanceFactor = options.clearanceFactor || 1.15; // w / s0
+    this.clearanceFactor = options.clearanceFactor || 1.28; // w / s0
     this.beta = options.beta || 2.0;        // Drawing ratio D0 / dp
     
     this.materialKey = options.materialKey || 'dc01';
@@ -88,7 +88,7 @@ class DeepDrawingSimulation {
     this.R0 = this.D0 / 2.0;
     this.Rp = this.dp / 2.0;
     // Dynamic clearance (default accommodates up to +28% thickening without ironing)
-    this.clearanceFactor = options.clearanceFactor || 1.28;
+    this.clearanceFactor = this.clearanceFactor || 1.28;
     this.clearance = this.s0 * this.clearanceFactor;
     this.Rd = this.Rp + this.clearance;
     this.dd = this.Rd * 2.0;

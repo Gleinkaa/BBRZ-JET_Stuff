@@ -242,11 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAll();
   });
 
-  btnStepFwd.addEventListener('click', () => {
-    stopPlayback();
-    sim.setStrokeProgress(Math.min(1.0, sim.strokeProgress + 0.1));
-    updateAll();
-  });
+  if (btnStepFwd) {
+    btnStepFwd.addEventListener('click', () => {
+      stopPlayback();
+      sim.setStrokeProgress(Math.min(1.0, sim.strokeProgress + 0.1));
+      updateAll();
+    });
+  }
 
   // Initial state: Start at 0% stroke with a flat plate (Blechronde)
   sim.setStrokeProgress(0.0);
