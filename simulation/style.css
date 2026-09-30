@@ -502,3 +502,35 @@ canvas {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phones */
+@media (max-width: 640px) {
+  header {
+    height: auto;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header-title h1 {
+    font-size: 15px;
+  }
+  .header-title .badge-topic,
+  .panel-actions,
+  .chart-header .badge-topic {
+    display: none;
+  }
+  main {
+    padding: 12px;
+    gap: 12px;
+  }
+  main > *,
+  .vis-container,
+  .control-panel,
+  .viewport-panel,
+  .chart-card {
+    min-width: 0;
+  }
+  .metrics-row {
+    gap: 10px;
+  }
+}
