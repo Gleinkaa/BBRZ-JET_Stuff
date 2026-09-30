@@ -59,6 +59,8 @@ python3 -m http.server 8080
 # Öffnen im Browser unter: http://localhost:8080
 ```
 
+**Auf dem Handy (Tailnet, A9 Max):** `simulation/serve.py` liefert den Ordner mit HTTP-Basic-Auth auf `127.0.0.1:8079` aus (User-Service `bbrz-sim.service`, Zugangsdaten in `~/.config/bbrz-sim.env`), freigegeben per `tailscale serve --https=8444` → `https://a9max-linux.taildc6822.ts.net:8444/` (nur im Tailnet).
+
 ---
 
 ## 📊 2. Excel-Arbeitsmappe & Rechenblätter (`excel/`)
