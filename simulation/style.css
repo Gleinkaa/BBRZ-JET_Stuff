@@ -201,6 +201,7 @@ select {
 
 button {
   font-family: var(--font-sans);
+  white-space: nowrap;
   font-size: 13px;
   font-weight: 500;
   height: 32px;

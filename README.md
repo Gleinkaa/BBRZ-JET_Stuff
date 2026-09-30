@@ -15,7 +15,7 @@ Dieses Repository bündelt ingenieurmäßige Berechnungsmethoden, didaktische Vi
 BBRZ-JET_Stuff/
 ├── simulation/            # Interaktive High-Fidelity 2D/3D WebGL-Simulation
 │   ├── index.html         # Web-Applikation mit Steuerpanel & Metriken
-│   ├── simulation.js      # Plastizitätsmodell, Dickenberechnung & Siebel-Ziehkraft
+│   ├── simulation.js      # Materialpunkt-Modell: Hill-Fließregel, Siebel-Ziehkraft, Abstrecken
 │   ├── view2d.js          # Symmetrischer 2D-Schnitt & Werkzeugvisualisierung
 │   ├── view3d.js          # 3D Three.js Schnittmodell mit Dicken-Farbkodierung
 │   ├── chart.js           # Konturbezogenes Wanddickenprofil s(l) (Chart.js/Canvas)
@@ -37,15 +37,18 @@ BBRZ-JET_Stuff/
 Die Web-Applikation veranschaulicht die physikalischen Phänomene des Tiefziehens in Echtzeit:
 
 * **Ebene Ausgangsronde bei 0% Stößelhub:** Bei $h = 0$ liegt das Blech vollständig flach auf der Ziehmatrize auf ($s = s_0$ über den gesamten Radius).
+* **Vollständiger Durchzug bei 100% Hub:** Der Hub läuft, bis der Rand die Ziehringrundung verlassen hat – am Ende steht ein flanschloser Napf. Die Napfhöhe stimmt mit der Rechenbuch-Formel $h = (D_0^2 - d^2)/(4d)$ überein (Default: 38,5 mm vs. 37,5 mm für den scharfkantigen Napf).
 * **Materialeinschnürung am Stempelradius (Necking / Bodenreißer-Gefahr):**  
-  Durch Überlagerung von Zug- und Biegespannungen bildet sich an der Stempelkante ein ausgeprägtes Wanddickenminimum ($s_{\min} < s_0$).
+  Am Übergang Stempelkantenradius → Zarge bildet sich das Wanddickenminimum ($s_{\min} < s_0$). Es wächst mit dem Verhältnis Ziehkraft / Bodenreißkraft $\pi \cdot d \cdot s_0 \cdot R_m$ und mit kleinerem $r_p$.
 * **Materialverdickung im Flansch (Hoop Compression):**  
-  Beim Einziehen des Blechs treten hohe tangentiale Druckspannungen auf ($\varepsilon_t = \ln(r / R_0) < 0$). Wegen der plastischen Inkompressibilität ($\varepsilon_r + \varepsilon_t + \varepsilon_s = 0$) führt dies am Zylinderrand zu einer messbaren Blechverdickung ($s_{\max} > s_0$).
+  Beim Einziehen wird jeder Materialpunkt vom Ausgangsradius $\rho$ auf den Radius $r$ gestaucht ($\varepsilon_t = \ln(r / \rho) < 0$). Die Dickenänderung folgt der Fließregel nach Hill mit der senkrechten Anisotropie $r$ des Werkstoffs; am freien Rand ($\sigma_r = 0$) gilt $\varepsilon_s = -\varepsilon_t / (1 + r)$. Die Verdickung ist deshalb **am oberen Napfrand am größten** und bleibt dort bis zum Ende erhalten.
 * **Ziehkraftverlauf nach Siebel:**  
-  Glockenkurven-Verlauf $F_z(h)$ mit Kraftmaximum bei ca. 30–40 % des Hubs und Abfall auf 0 kN, sobald der Flansch voll eingezogen ist.
+  $F = \pi d_m s_0 \left[(1{,}1\,\sigma_{fm} \ln\tfrac{R_a}{R_d} + \tfrac{2 \mu F_N}{\pi d_m s_0}) e^{\mu \pi / 2} + \sigma_{fm} \tfrac{s_0}{2 r_d + s_0}\right]$ mit Fließkurve nach Hollomon (aus $R_e$, $R_m$, $n$). Kraftmaximum bei ca. 30 % des Hubs, Abfall auf 0 kN, sobald der Rand den Ziehring verlässt.
 * **Ziehspalt & Abstreckwarnung:**  
-  Automatischer Abgleich des Ziehspalts $w \approx 1{,}28 \cdot s_0$. Sollte $s_{\max} > w$ werden, signalisiert die Simulation sofort eine **Abstreckgefahr** (Ironing risk).
+  Ziehspalt $w = 1{,}28 \cdot s_0$. Material, das dicker als $w$ in den Spalt läuft, wird auf $w$ abgestreckt und die Simulation meldet **Abstrecken**.
 * **GPU- und batterieschonend:** On-Demand-Rendering in Three.js (kein permanenter Render-Loop im Leerlauf).
+
+> **Modellgrenzen:** Kinematik über Oberflächengleichheit (wie bei der Zuschnittberechnung), keine FEM. Die Einschnürung an der Stempelkante ist empirisch kalibriert (DC01, β = 2 → ca. −16 %; bei β ≈ β_max erreicht die Ziehkraft die Bodenreißkraft). Die Werte sind für den Unterricht plausibel, aber keine Auslegungsgrundlage.
 
 ### Simulation starten
 Einfach die Datei [`simulation/index.html`](file:///home/nik/Work/BBRZ-JET_Stuff/simulation/index.html) in einem modernen Webbrowser öffnen (z.B. Google Chrome, Firefox, Edge) oder per lokalem Webserver:

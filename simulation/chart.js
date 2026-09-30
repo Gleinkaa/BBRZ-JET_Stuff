@@ -9,7 +9,7 @@ class ThicknessChart {
     this.sim = simulation;
     
     this.hoverIndex = null;
-    this.padding = { top: 25, right: 35, bottom: 35, left: 105 }; // Generous left padding
+    this.padding = { top: 25, right: 35, bottom: 50, left: 105 }; // Generous left padding
     
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -201,13 +201,13 @@ class ThicknessChart {
       ctx.font = "10px JetBrains Mono, monospace";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
-      ctx.fillText(`AUSDUeNNUNG (rp):`, boxX + boxW * 0.5, boxY + 14);
+      ctx.fillText(`AUSDÜNNUNG (rp):`, boxX + boxW * 0.5, boxY + 14);
       ctx.fillStyle = "#ef4444";
       ctx.fillText(`s_min = ${minPt.s.toFixed(2)}mm (${minPt.deltaPct.toFixed(1)}%)`, boxX + boxW * 0.5, boxY + 27);
     }
 
-    // Maxima at rim
-    const maxPt = pts[pts.length - 1];
+    // Maximum (normally the rim, unless it was ironed down to the die gap)
+    const maxPt = pts[sim.summary.iMax] || pts[pts.length - 1];
     if (maxPt.s > s0 * 1.04) {
       const rx = mapX(maxPt.contourPos);
       const ry = mapY(maxPt.s);
@@ -222,7 +222,7 @@ class ThicknessChart {
       ctx.lineWidth = 1;
       const boxW = 145;
       const boxH = 34;
-      const boxX = rx - boxW - 8;
+      const boxX = Math.max(pad.left + 4, rx - boxW - 8);
       const boxY = Math.max(pad.top + 4, ry - boxH * 0.5);
 
       ctx.fillRect(boxX, boxY, boxW, boxH);
@@ -231,7 +231,7 @@ class ThicknessChart {
       ctx.font = "10px JetBrains Mono, monospace";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
-      ctx.fillText(`VERDICKUNG (Rand):`, boxX + boxW * 0.5, boxY + 14);
+      ctx.fillText(maxPt.index === pts.length - 1 ? `VERDICKUNG (Rand):` : `VERDICKUNG (max):`, boxX + boxW * 0.5, boxY + 14);
       ctx.fillStyle = "#06b6d4";
       ctx.fillText(`s_max = ${maxPt.s.toFixed(2)}mm (+${maxPt.deltaPct.toFixed(1)}%)`, boxX + boxW * 0.5, boxY + 27);
     }

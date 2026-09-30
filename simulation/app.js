@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     metricFdraw.textContent = sum.drawingForce.toFixed(1) + " kN";
     metricStroke.textContent = sum.stroke_mm.toFixed(1) + " mm";
-    metricStrokeSub.textContent = `von max. ${sum.hMax.toFixed(1)} mm`;
+    metricStrokeSub.textContent = `von max. ${sum.hMax.toFixed(1)} mm · Napfhöhe ${sum.cupHeight.toFixed(1)} mm`;
 
     // Status Pill
     statusPill.className = `status-pill ${sum.status}`;
@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
       inspectDelta.style.color = point.deltaPct < -15 ? "var(--crit)" : (point.deltaPct > 5 ? "var(--info)" : "var(--good)");
       
       const zoneNames = {
+        flat_blank: 'Ebene Ronde',
         bottom: 'Boden (Biaxial)',
         punch_corner: 'Stempelkante (Einschnürung)',
         wall: 'Zylinderwand (Zug)',

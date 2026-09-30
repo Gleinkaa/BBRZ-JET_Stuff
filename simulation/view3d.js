@@ -56,9 +56,9 @@ class View3D {
     this.scene.add(dirLight2);
 
     // Subtle floor grid
-    const gridHelper = new THREE.GridHelper(160, 16, 0x334155, 0x1e293b);
-    gridHelper.position.y = -45;
-    this.scene.add(gridHelper);
+    this.gridHelper = new THREE.GridHelper(160, 16, 0x334155, 0x1e293b);
+    this.gridHelper.position.y = -45;
+    this.scene.add(this.gridHelper);
 
     // Cup mesh group
     this.cupGroup = new THREE.Group();
@@ -84,6 +84,19 @@ class View3D {
         this.renderer.render(this.scene, this.camera);
       });
     }
+  }
+
+  // Reframe only when the tool geometry changes, so user orbiting is kept during playback
+  fitCamera() {
+    const key = `${this.sim.R0.toFixed(2)}|${this.sim.hMax.toFixed(2)}`;
+    if (key === this.cameraKey || !this.controls) return;
+    this.cameraKey = key;
+    const size = Math.max(this.sim.R0, this.sim.hMax, 30) / 50.0;
+    const target = new THREE.Vector3(0, -Math.min(12, this.sim.hMax * 0.25) - (size - 1) * 25, 0);
+    const offset = new THREE.Vector3(75, 67, 90).multiplyScalar(size);
+    this.controls.target.copy(target);
+    this.camera.position.copy(target).add(offset);
+    this.gridHelper.scale.setScalar(Math.max(1, size));
   }
 
   onResize() {
@@ -113,6 +126,10 @@ class View3D {
     const pts = this.sim.points;
     if (!pts || pts.length < 2) return;
 
+    // Keep the floor below the deepest cup this geometry can produce
+    this.gridHelper.position.y = -Math.max(45, this.sim.hMax + 5);
+    this.fitCamera();
+
     const numTheta = 54; // Circumferential segments
     const maxTheta = this.cutawayAngle; // 270 deg cutaway
     const numRad = pts.length;
@@ -136,10 +153,20 @@ class View3D {
     const ringVerticesCount = (numTheta + 1);
 
     // --- 1. OUTER SURFACE ---
+    // Surface normal of the midsurface contour (pointing to the outside / die side)
+    const normals = pts.map((p, i) => {
+      const a = pts[Math.max(0, i - 1)];
+      const b = pts[Math.min(numRad - 1, i + 1)];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      return { nx: dy / len, ny: -dx / len };
+    });
+
     for (let i = 0; i < numRad; i++) {
       const p = pts[i];
-      const r_out = p.x + p.s * 0.5;
-      const y = p.y;
+      const n = normals[i];
+      const r_out = Math.max(0, p.x + n.nx * p.s * 0.5);
+      const y = p.y + n.ny * p.s * 0.5;
       const col = parseColor(p.color);
 
       for (let j = 0; j <= numTheta; j++) {
@@ -169,8 +196,9 @@ class View3D {
     const innerVertexOffset = vertices.length / 3;
     for (let i = 0; i < numRad; i++) {
       const p = pts[i];
-      const r_in = Math.max(0, p.x - p.s * 0.5);
-      const y = p.y;
+      const n = normals[i];
+      const r_in = Math.max(0, p.x - n.nx * p.s * 0.5);
+      const y = p.y - n.ny * p.s * 0.5;
       const col = parseColor(p.color);
 
       for (let j = 0; j <= numTheta; j++) {
