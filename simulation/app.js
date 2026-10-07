@@ -70,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Update Function
   function updateAll(hoverPt = null) {
-    sim.calculate(sim.strokeProgress);
-
     // Update 2D View
     view2d.render();
 
@@ -107,11 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. Connect Hover between 2D View, Chart, and Tooltip
-  view2d.onHoverCallback = (point, mouseX, mouseY) => {
+  view2d.onHoverCallback = (point) => {
     chart.render(point);
     if (point) {
       inspectOverlay.style.display = 'flex';
-      inspectX.textContent = point.x.toFixed(1) + " mm";
+      inspectX.textContent = `${point.x.toFixed(1)} mm (Ronde: R = ${point.R.toFixed(1)} mm)`;
       inspectS.textContent = point.s.toFixed(2) + " mm";
       inspectDelta.textContent = (point.deltaPct >= 0 ? "+" : "") + point.deltaPct.toFixed(1) + "%";
       inspectDelta.style.color = point.deltaPct < -15 ? "var(--crit)" : (point.deltaPct > 5 ? "var(--info)" : "var(--good)");
@@ -121,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bottom: 'Boden (Biaxial)',
         punch_corner: 'Stempelkante (Einschnürung)',
         wall: 'Zylinderwand (Zug)',
-        die_corner: 'Ziehringkante',
+        die_corner: 'Ziehringkante (Biegen + Stauchen)',
         flange: 'Flansch (Tangentialstauchung)'
       };
       inspectZone.textContent = zoneNames[point.zone] || point.zone;

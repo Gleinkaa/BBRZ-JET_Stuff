@@ -44,8 +44,9 @@ class ThicknessChart {
 
     // Y-axis range: 60% to 140% of s0
     const s0 = sim.s0;
-    const yMinVal = s0 * 0.60;
-    const yMaxVal = s0 * 1.40;
+    // At least 60–140 % of s0, widened when a tear or strong thickening leaves that band
+    const yMinVal = s0 * Math.min(0.60, sim.summary.sMin / s0 - 0.05);
+    const yMaxVal = s0 * Math.max(1.40, sim.summary.sMax / s0 + 0.05);
 
     const maxContour = sim.summary.totalContourLength || 100;
     const mapX = (l) => pad.left + (l / maxContour) * plotW;
@@ -72,7 +73,8 @@ class ThicknessChart {
     ctx.font = "11px JetBrains Mono, monospace";
     ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
 
-    const pctTicks = [0.70, 0.80, 0.90, 1.00, 1.10, 1.20, 1.30];
+    const pctTicks = [];
+    for (let k = Math.ceil(yMinVal / s0 * 10 + 1e-9); k <= Math.floor(yMaxVal / s0 * 10 - 1e-9); k++) pctTicks.push(k / 10);
     for (const pct of pctTicks) {
       const val = s0 * pct;
       const y = mapY(val);

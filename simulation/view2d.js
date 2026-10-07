@@ -121,7 +121,6 @@ class View2D {
     const visualThicknessFactor = 2.2;
     const visualThickness = sim.s0 * visualThicknessFactor;
     const ex = (visualThicknessFactor - 1.0) * sim.s0 * 0.5;
-    const X = (x) => ox + x * scale;
     const Y = (y) => oy - y * scale;
 
     // ------------------------------------------------

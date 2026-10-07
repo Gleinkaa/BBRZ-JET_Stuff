@@ -37,7 +37,7 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 ## 2. Detaillierte Lösungen der Übungsaufgaben (S. 248)
 
 ### Aufgabe 6: Ziehteildurchmesser
-> **Aufgabenstellung:** Auf welchen kleinsten Ziehteildurchmesser kann ein Zuschnitt aus kaltgewalztem Blech DC01 mit einem Durchmesser von 117 mm in einem Zug zu einem einfachen Zylinder gezogen werden?
+> **Gesucht:** kleinster Durchmesser, auf den eine DC01-Ronde mit D = 117 mm in einem einzigen Zug zu einem Zylinder gezogen werden kann.
 
 * **Gegeben:**
   * Zuschnittdurchmesser $D = 117\text{ mm}$
@@ -55,9 +55,7 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 ---
 
 ### Aufgabe 7: Zylinder ohne Rand
-> **Aufgabenstellung:** Ein Zylinder ohne Rand mit 20 mm Durchmesser und 30 mm Höhe ist aus DC04 tiefzuziehen.  
-> a) Wie groß muss der Zuschnittdurchmesser sein?  
-> b) Wie viele Züge sind erforderlich?
+> **Gesucht:** für einen randlosen DC04-Zylinder (d = 20 mm, h = 30 mm) a) der Zuschnittdurchmesser, b) die Anzahl der Züge.
 
 * **Gegeben:**
   * Zylinderdurchmesser $d = 20\text{ mm}$
@@ -81,11 +79,7 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 ---
 
 ### Aufgabe 8: Relaisgehäuse
-> **Aufgabenstellung:** Ein zylindrisches Relaisgehäuse ohne Rand aus EN AW-Al 99,5 soll durch Tiefziehen hergestellt werden. Der Durchmesser beträgt 15 mm, die Höhe 60 mm.  
-> a) Wie groß muss der Zuschnittdurchmesser sein?  
-> b) Wie groß sind die Stempeldurchmesser der Zwischenzüge, und wie viele Züge sind erforderlich?  
-> Die maximal zulässigen Ziehverhältnisse sind $\beta_1 = 2{,}1$, $\beta_2 = 1{,}6$ und $\beta_3 = 1{,}4$.  
-> c) Wie groß ist das Ziehverhältnis beim Fertigzug?
+> **Gesucht:** für ein randloses Gehäuse aus EN AW-Al 99,5 (d = 15 mm, h = 60 mm) a) der Zuschnittdurchmesser, b) die Stempeldurchmesser der Zwischenzüge und die Zahl der Züge, c) das Ziehverhältnis im Fertigzug. Zulässig sind $\beta_1 = 2{,}1$, $\beta_2 = 1{,}6$, $\beta_3 = 1{,}4$.
 
 * **Gegeben:**
   * Fertigteildurchmesser $d = 15\text{ mm}$
@@ -105,7 +99,7 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 ---
 
 ### Aufgabe 9: Kegeleinsatz (Bild 4)
-> **Aufgabenstellung:** Wie groß muss der Zuschnittdurchmesser für den Kegeleinsatz sein?
+> **Gesucht:** Zuschnittdurchmesser des Kegeleinsatzes (Geometrie nach Bild 4 der Aufgabe).
 
 * **Geometrie nach Bild 4:**
   * Flansch/Rand-Außendurchmesser: $d_3 = 80\text{ mm}$
@@ -125,16 +119,12 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 * **Gesamtfläche:**
   $$A_{\text{ges}} = 1256{,}64 + 8009{,}53 + 3769{,}91 + 2199{,}11 = 15235{,}20\text{ mm}^2$$
 * **Zuschnittdurchmesser:**
-  $$D = \sqrt{\frac{4 \cdot A_{\text{ges}}}{\pi}} = \sqrt{\frac{4 \cdot 15235{,}20}{\pi}} = \mathbf{139{,}33\text{ mm} \approx 139{,}3\text{ mm}}$$
+  $$D = \sqrt{\frac{4 \cdot A_{\text{ges}}}{\pi}} = \sqrt{\frac{4 \cdot 15235{,}20}{\pi}} = \mathbf{139{,}28\text{ mm} \approx 139{,}3\text{ mm}}$$
 
 ---
 
 ### Aufgabe 10: Behälter
-> **Aufgabenstellung:** Ein zylindrischer Kupferbehälter ohne Rand soll in einem Zug auf einen Durchmesser von 74 mm gezogen werden. Dabei soll die größtmögliche Höhe des Behälters erreicht werden.  
-> a) Welcher Zuschnittdurchmesser ist erforderlich?  
-> b) Welche größte Höhe ist möglich?  
-> c) Wie groß ist der Blechbedarf für einen Behälter?  
-> d) Der Zuschnitt wird aus einem 160 mm breiten Streifen einreihig gestanzt...
+> **Gesucht:** für einen randlosen Kupferbehälter, der in einem Zug auf d = 74 mm mit größtmöglicher Höhe gezogen wird: a) Zuschnittdurchmesser, b) größte Höhe, c) Blechbedarf je Behälter, d) Materialausnutzung beim einreihigen Ausschneiden aus einem 160 mm breiten Streifen.
 
 * **Gegeben:**
   * $d = 74\text{ mm}$, Werkstoff: Kupfer (Cu, $\beta_{1,\max} \approx 2{,}10$), Streifenbreite $B = 160\text{ mm}$
@@ -145,5 +135,5 @@ Das Ziehverhältnis beschreibt den Umformgrad je Zugstufe:
 * **Teil c) & d) Blechbedarf & Ausnutzung:**
   * Mit Stegbreite $e = 3\text{ mm} \implies \text{Vorschub } v = D + e = 158{,}4\text{ mm}$
   * Bruttobedarf: $A_{\text{Bedarf}} = B \cdot v = 160 \cdot 158{,}4 = \mathbf{25344\text{ mm}^2}$
-  * Netto-Rondenfläche: $A_{\text{Ronde}} = \frac{\pi \cdot 155{,}4^2}{4} = 18967{,}4\text{ mm}^2$
-  * Materialausnutzung: $\eta = \frac{18967{,}4}{25344} = \mathbf{74{,}8\%}$ (Verschnitt: $25{,}2\%$).
+  * Netto-Rondenfläche: $A_{\text{Ronde}} = \frac{\pi \cdot 155{,}4^2}{4} = 18966{,}7\text{ mm}^2$
+  * Materialausnutzung: $\eta = \frac{18966{,}7}{25344} = \mathbf{74{,}8\%}$ (Verschnitt: $25{,}2\%$).

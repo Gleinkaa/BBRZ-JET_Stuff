@@ -1,3 +1,4 @@
+import os
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -233,7 +234,7 @@ r_8_D = add_row("a) Zuschnittdurchmesser D", "D", None, "mm", "D = √(d² + 4·
 r_8_d1 = add_row("b) Stempeldurchmesser 1. Zug (Zwischenzug)", "d1", None, "mm", "d1 = D / β1", f"=C{r_8_D}/C{r_8_b1}", "Größtmöglicher Stempel Zug 1", is_output=True)
 r_8_d2 = add_row("b) Stempeldurchmesser 2. Zug (Zwischenzug)", "d2", None, "mm", "d2 = d1 / β2", f"=C{r_8_d1}/C{r_8_b2}", "Stempel Zug 2 (> 15 mm -> Zug 3 nötig)", is_output=True)
 r_8_d3 = add_row("b) Stempeldurchmesser 3. Zug (Fertigzug)", "d3", None, "mm", "d3 = d", f"=C{r_8_d}", "Fertigmaß erreicht!", is_output=True)
-r_8_anz = add_row("b) Gesamtzahl erforderlicher Züge", "n", 3, "Züge", "3 Züge nötig (d2 = 18,4 mm > 15 mm)", None, "1. Zug (29,45 mm) -> 2. Zug (18,41 mm) -> 3. Zug (15 mm)", is_output=True, num_format="0")
+r_8_anz = add_row("b) Gesamtzahl erforderlicher Züge", "n", None, "Züge", "WENN(d1 <= d; 1; WENN(d2 <= d; 2; 3))", f"=IF(C{r_8_d1}<=C{r_8_d}, 1, IF(C{r_8_d2}<=C{r_8_d}, 2, 3))", "1. Zug (29,45 mm) -> 2. Zug (18,41 mm) -> 3. Zug (15 mm)", is_output=True, num_format="0")
 r_8_bfertig = add_row("c) Ziehverhältnis beim Fertigzug", "β_fertig", None, "-", "β_fertig = d2 / d3", f"=C{r_8_d2}/C{r_8_d3}", "Tatsächliches Ziehverhältnis im 3. Zug", is_output=True)
 
 # ----------------- AUFGABE 9 -----------------
@@ -352,6 +353,6 @@ ws3.column_dimensions['D'].width = 18
 ws3.column_dimensions['E'].width = 18
 ws3.column_dimensions['F'].width = 46
 
-out_path = "/home/nik/data/Tiefziehen_Berechnungen_Uebungen_6-10.xlsx"
+out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Tiefziehen_Berechnungen_Uebungen_6-10.xlsx")
 wb.save(out_path)
 print(f"Workbook successfully saved to: {out_path}")
