@@ -27,6 +27,7 @@ BBRZ-JET_Stuff/
 │   └── Tiefziehen_Berechnungen_Uebungen_6-10.xlsx
 └── docs/
     └── rechenbuch_metall_uebungen_6-10.md  # Musterlösungen mit Rechenweg
+pyramid-volume.html        # Geometrie: Warum ist eine Pyramide genau ⅓? (eigenständige Seite, EN/DE)
 ```
 
 ---
@@ -107,6 +108,20 @@ Die Datei enthält Formeln ohne vorberechnete Werte. Excel und LibreOffice rechn
 ## 3. Musterlösungen (`docs/`)
 
 [`docs/rechenbuch_metall_uebungen_6-10.md`](docs/rechenbuch_metall_uebungen_6-10.md) enthält die Formeln und die Lösungen der Aufgaben 6–10 mit vollständigem Rechenweg.
+
+---
+
+## 4. Pyramidenvolumen – „Warum genau ein Drittel?“ (`pyramid-volume.html`)
+
+Eigenständige, interaktive Seite zur Formel $V = \tfrac{1}{3}\,a^2\,h$ der quadratischen Pyramide. Eine HTML-Datei, läuft offline, nichts zu installieren; Sprache EN/DE (automatisch nach Browsersprache, umschaltbar). Alle 3D-Figuren lassen sich mit der Maus oder den Pfeiltasten drehen.
+
+**Online:** <https://gleinkaa.github.io/BBRZ-JET_Stuff/pyramid-volume.html>
+
+1. **Experiment** – drei Pyramiden voll Wasser füllen den Quader gleicher Grundfläche und Höhe (animiert, mit ⅓- und ⅔-Marken).
+2. **Beweis, Schritt 1** – ein Würfel zerfällt in drei deckungsgleiche Pyramiden, also ist jede ⅓ · a³. Regler zum Auseinanderziehen, „Vergleichen“ stellt die Teile gleich gedreht nebeneinander.
+3. **Beweis, Schritt 2** – Strecken (Höhe) und Verschieben der Spitze (Cavalieri): gleiche Schnittflächen, gleiches Volumen – damit gilt ⅓ für jede quadratische Pyramide.
+4. **Nachrechnen** – Treppenpyramide aus n Platten (außen/innen), exakte Summe (1² + … + n²)/n³ und Diagramm, das von beiden Seiten gegen ⅓ läuft.
+5. **Zusammenfassung** mit Integralrechnung und dem Hinweis, dass ⅓ · G · h für jede Grundfläche gilt (auch Kegel).
 
 ---
 
