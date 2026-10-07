@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why is a pyramid exactly one third?</title>
+<style>
+:root{
+  --paper:#f4efe4; --stage:#ebe4d4; --ink:#1f1c18; --body:#2d2923; --muted:#6d6558; --rule:#d5cbb7;
+  --red:#c0513b; --blue:#2b6390; --yellow:#dfa42f; --water:#3b88c6;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"URW Palladio L",P052,"Book Antiqua","Noto Serif",Georgia,serif;
+  --sans:"Avenir Next",Seravek,"Segoe UI","Noto Sans","DejaVu Sans",sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--body)}
+body{margin:0;font:18px/1.58 var(--serif);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+i,em{font-style:italic}
+b{font-weight:700;color:var(--ink)}
+.wrap{max-width:1260px;margin:0 auto;padding:0 32px}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid var(--rule)}
+.kicker{font:600 12.5px/1.3 var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.lang{display:inline-flex;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.lang button{border:0;border-radius:0;min-height:34px;padding:0 12px;font:700 13px var(--sans);letter-spacing:.06em}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:56px;align-items:center;padding:52px 0 60px}
+h1{font-weight:600;font-size:clamp(38px,5.2vw,68px);line-height:1.02;letter-spacing:-.012em;margin:0 0 22px;color:var(--ink);text-wrap:balance}
+.lede{font-size:21px;line-height:1.5;margin:0;max-width:33em;text-wrap:pretty}
+.formula{margin:34px 0 0;padding:22px 0 0;border-top:3px solid var(--ink)}
+.big{font-size:clamp(46px,6vw,78px);line-height:1;color:var(--ink);display:flex;align-items:center;gap:.2em;white-space:nowrap}
+.fr{display:inline-flex;flex-direction:column;align-items:center;font-size:.6em;line-height:1.08;margin:0 .04em}
+.fr>span:first-child{border-bottom:.075em solid currentColor;padding:0 .18em .02em}
+.legend{display:grid;grid-template-columns:3.2em 1fr;gap:4px 12px;margin:22px 0 0;font-size:17px}
+.legend dt{font-style:italic;color:var(--ink);font-weight:600}
+.legend dd{margin:0;color:var(--body)}
+
+/* stages */
+.stage{position:relative;background:var(--stage);border-radius:12px;overflow:hidden;aspect-ratio:16/11}
+.stage.sq{aspect-ratio:5/4}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y;outline:none}
+.stage canvas.grabbing{cursor:grabbing}
+.stage canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--yellow)}
+.hint{position:absolute;right:14px;bottom:11px;font:600 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none;transition:opacity .4s}
+.stage.touched .hint{opacity:0}
+.status{position:absolute;left:18px;top:14px;pointer-events:none}
+.status .main{display:block;font:600 19px/1.3 var(--serif);color:var(--ink)}
+.status .sub{display:block;font:500 13px/1.4 var(--sans);color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* sections */
+.step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:60px;padding:68px 0;border-top:1px solid var(--rule);align-items:start}
+.step.flip{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.step.flip .text{order:2}
+.text{max-width:35em}
+.text h2{font-size:clamp(28px,3vw,38px);line-height:1.1;margin:8px 0 20px;font-weight:600;color:var(--ink);text-wrap:balance}
+.text p{margin:0 0 15px;text-wrap:pretty}
+.mathline{font-size:23px;color:var(--ink);margin:20px 0;padding:14px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);line-height:1.5}
+.mathline.small{font-size:20px}
+.sw{display:inline-block;width:.68em;height:.68em;border-radius:2px;background:var(--c);margin:0 .22em 0 .05em;position:relative;top:.04em}
+.dim{color:var(--muted)}
+
+/* controls */
+.controls{display:grid;gap:8px;margin-top:16px}
+.rng{display:grid;grid-template-columns:8.6em minmax(0,1fr) 10.5em;align-items:center;gap:14px;font:500 15px var(--sans);color:var(--body)}
+.rng output{font:500 14.5px var(--sans);color:var(--muted);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:34px;accent-color:var(--ink);margin:0;cursor:pointer}
+.btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:600 15px var(--sans);min-height:42px;padding:0 18px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:8px;cursor:pointer}
+button:hover{background:rgba(31,28,24,.07)}
+button.primary{background:var(--ink);color:var(--paper)}
+button.primary:hover{background:#3a352d}
+button:focus-visible,input:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+button:disabled,input:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-checked="true"]{background:var(--ink);color:var(--paper)}
+.readout{margin-top:14px;font-size:17.5px;line-height:1.6;font-variant-numeric:tabular-nums;color:var(--body)}
+.chart{display:block;width:100%;height:170px;margin-top:14px;background:var(--stage);border-radius:10px}
+
+/* summary */
+.summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:60px;padding:68px 0 40px;border-top:1px solid var(--rule)}
+.summary .big{margin:6px 0 18px}
+.summary p{margin:0 0 16px;max-width:34em;text-wrap:pretty}
+.int{display:inline-flex;align-items:center}
+.lims{display:inline-flex;flex-direction:column;font-size:.55em;line-height:1.05;margin:0 .25em 0 .05em}
+footer{padding:26px 0 48px;border-top:1px solid var(--rule);font:500 13px var(--sans);color:var(--muted)}
+
+@media (max-width:920px){
+  .wrap{padding:0 20px}
+  .hero,.step,.step.flip,.summary{grid-template-columns:1fr;gap:30px}
+  .step.flip .text{order:0}
+  .hero{padding:36px 0 44px}
+  .step{padding:48px 0}
+  .rng{grid-template-columns:6.6em minmax(0,1fr);}
+  .rng output{grid-column:2;margin-top:-8px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="bar">
+    <span class="kicker" data-i18n="kicker"></span>
+    <div class="lang" role="group" aria-label="Language / Sprache">
+      <button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
+    </div>
+  </div>
+  <div class="hero">
+    <div>
+      <h1 data-i18n="title"></h1>
+      <p class="lede" data-i18n="lede"></p>
+      <div class="formula">
+        <div class="big" aria-label="V equals one third times a squared times h"><i>V</i> = <span class="fr"><span>1</span><span>3</span></span> · <span><i>a</i>²</span> · <i>h</i></div>
+        <dl class="legend">
+          <dt>a</dt><dd data-i18n="lg_a"></dd>
+          <dt>a²</dt><dd data-i18n="lg_G"></dd>
+          <dt>h</dt><dd data-i18n="lg_h"></dd>
+        </dl>
+      </div>
+    </div>
+    <div class="stage sq"><canvas id="cv-hero" aria-label="Pyramid inside a box with the same base and height"></canvas><span class="hint" data-i18n="hint"></span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 1 experiment -->
+  <section class="step" id="s1">
+    <div class="text">
+      <div class="kicker" data-i18n="s1_k"></div>
+      <h2 data-i18n="s1_t"></h2>
+      <p data-i18n="s1_p1"></p>
+      <p data-i18n="s1_p2"></p>
+      <div class="mathline" data-i18n="s1_m"></div>
+      <p data-i18n="s1_p3"></p>
+    </div>
+    <figure style="margin:0">
+      <div class="stage">
+        <canvas id="cv-pour" aria-label="Animation: three pyramids of water fill the box"></canvas>
+        <div class="status"><span class="main" id="pour-main" aria-live="polite"></span><span class="sub" id="pour-sub"></span></div>
+        <span class="hint" data-i18n="hint"></span>
+      </div>
+      <div class="controls"><div class="btns">
+        <button type="button" class="primary" id="pour-play"></button>
+        <button type="button" id="pour-restart" data-i18n="btn_restart"></button>
+      </div></div>
+    </figure>
+  </section>
+
+  <!-- 2 cube -->
+  <section class="step flip" id="s2">
+    <div class="text">
+      <div class="kicker" data-i18n="s2_k"></div>
+      <h2 data-i18n="s2_t"></h2>
+      <p data-i18n="s2_p1"></p>
+      <p data-i18n="s2_p2"></p>
+      <p data-i18n="s2_p3"></p>
+      <div class="mathline"><i>V</i> = ⅓ · <i>a</i>³ = ⅓ · <i>a</i>² · <i>a</i></div>
+      <p data-i18n="s2_p4"></p>
+    </div>
+    <figure style="margin:0">
+      <div class="stage"><canvas id="cv-cube" aria-label="A cube cut into three identical pyramids"></canvas><span class="hint" data-i18n="hint"></span></div>
+      <div class="controls">
+        <label class="rng"><span data-i18n="ctl_apart"></span><input type="range" id="cube-ex" min="0" max="100" value="22"><output id="cube-ex-o"></output></label>
+        <div class="btns"><button type="button" class="primary" id="cube-cmp"></button></div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- 3 stretch & slide -->
+  <section class="step" id="s3">
+    <div class="text">
+      <div class="kicker" data-i18n="s3_k"></div>
+      <h2 data-i18n="s3_t"></h2>
+      <p data-i18n="s3_p1"></p>
+      <p data-i18n="s3_p2"></p>
+      <p data-i18n="s3_p3"></p>
+    </div>
+    <figure style="margin:0">
+      <div class="stage"><canvas id="cv-slide" aria-label="Two pyramids with equal cross-sections"></canvas><span class="hint" data-i18n="hint"></span></div>
+      <div class="controls">
+        <label class="rng"><span data-i18n="ctl_h"></span><input type="range" id="sl-h" min="0.8" max="3.4" step="0.01" value="2"><output id="o-h"></output></label>
+        <label class="rng"><span data-i18n="ctl_tip"></span><input type="range" id="sl-tip" min="-1.4" max="1.4" step="0.01" value="0"><output id="o-tip"></output></label>
+        <label class="rng"><span data-i18n="ctl_cut"></span><input type="range" id="sl-cut" min="0.05" max="0.92" step="0.01" value="0.4"><output id="o-cut"></output></label>
+      </div>
+      <div class="readout" id="ro3"></div>
+    </figure>
+  </section>
+
+  <!-- 4 stairs -->
+  <section class="step flip" id="s4">
+    <div class="text">
+      <div class="kicker" data-i18n="s4_k"></div>
+      <h2 data-i18n="s4_t"></h2>
+      <p data-i18n="s4_p1"></p>
+      <p data-i18n="s4_p2"></p>
+      <div class="mathline small" data-i18n="s4_m1"></div>
+      <p data-i18n="s4_p3"></p>
+      <div class="mathline small">(<i>n</i>+1)(2<i>n</i>+1) / 6<i>n</i>² &nbsp;=&nbsp; ⅓ + 1/(2<i>n</i>) + 1/(6<i>n</i>²)</div>
+      <p data-i18n="s4_p4"></p>
+    </div>
+    <figure style="margin:0">
+      <div class="stage"><canvas id="cv-stairs" aria-label="A pyramid approximated by square slabs"></canvas><span class="hint" data-i18n="hint"></span></div>
+      <div class="controls">
+        <label class="rng"><span data-i18n="ctl_n"></span><input type="range" id="sl-n" min="1" max="48" step="1" value="6"><output id="o-n"></output></label>
+        <div class="btns"><div class="seg" role="radiogroup" aria-label="stairs">
+          <button type="button" role="radio" aria-checked="true" data-mode="outer" data-i18n="mode_outer"></button>
+          <button type="button" role="radio" aria-checked="false" data-mode="inner" data-i18n="mode_inner"></button>
+        </div></div>
+      </div>
+      <div class="readout" id="ro4"></div>
+      <canvas class="chart" id="cv-chart" aria-label="Chart: stairs volume approaching one third"></canvas>
+    </figure>
+  </section>
+
+  <!-- summary -->
+  <section class="summary" id="s5">
+    <div>
+      <div class="kicker" data-i18n="s5_k"></div>
+      <div class="big"><i>V</i> = <span class="fr"><span>1</span><span>3</span></span> · <i>a</i>² · <i>h</i></div>
+      <p data-i18n="s5_p1"></p>
+    </div>
+    <div>
+      <p data-i18n="s5_p2"></p>
+      <div class="mathline small"><i>V</i> = <span class="int">∫<span class="lims"><i>h</i><span>0</span></span></span><i>a</i>²(1 − <i>y</i>/<i>h</i>)² d<i>y</i> = ⅓ · <i>a</i>² · <i>h</i></div>
+      <p data-i18n="s5_p3"></p>
+    </div>
+  </section>
+</main>
+<footer class="wrap" data-i18n="footer"></footer>
+<noscript><p class="wrap">This page needs JavaScript for the 3D figures.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ------------------------------------------------------------------ text */
+const STR = {
+en: {
+  kicker: 'Geometry · Volume of a square pyramid',
+  title: 'Why is a pyramid exactly one third?',
+  lede: 'A pyramid holds exactly ⅓ of the box with the same base and the same height. One experiment shows <em>that</em> it’s true; three pictures show <em>why</em>. Drag any figure to turn it.',
+  lg_a: 'side of the square base',
+  lg_G: 'base area',
+  lg_h: 'height — straight up from the base to the tip',
+  hint: 'drag to rotate',
+  s1_k: 'The claim',
+  s1_t: 'Three pyramids of water fill the box',
+  s1_p1: 'Take a hollow pyramid and a box that share the <b>same square base</b> and the <b>same height</b>. Fill the pyramid, pour it into the box, repeat.',
+  s1_p2: 'It takes <b>exactly three</b> pyramids to fill the box. The box holds <i>a</i>² · <i>h</i>, so one pyramid holds a third of that:',
+  s1_m: '<i>V</i><sub>pyramid</sub> = ⅓ · <i>V</i><sub>box</sub> = ⅓ · <i>a</i>² · <i>h</i>',
+  s1_p3: 'Watch the level while the pyramid fills: it rises slowly at first, then faster and faster — and when it is poured out, it drops fast at first, then slowly. Most of a pyramid’s volume sits down near its base; the tip holds almost nothing. An experiment shows <em>that</em> it works — the next three sections show <em>why</em>.',
+  btn_play: 'Play', btn_pause: 'Pause', btn_restart: 'Restart',
+  pour_fill: 'Filling pyramid {k} of 3', pour_drain: 'Pouring pyramid {k} of 3', pour_rest: '{k} of 3 poured',
+  pour_done: '3 pyramids = 1 box', pour_box: 'box {p} % full',
+  lbl_pyr: 'PYRAMID', lbl_box: 'BOX',
+  s2_k: 'Proof · step 1',
+  s2_t: 'Three equal pyramids build a cube',
+  s2_p1: 'Mark one corner of a cube (the black dot). Join it to the three faces that <em>don’t</em> touch it. That cuts the cube into three pyramids: <span class="sw" style="--c:var(--blue)"></span>blue, <span class="sw" style="--c:var(--red)"></span>red and <span class="sw" style="--c:var(--yellow)"></span>yellow.',
+  s2_p2: 'Each one stands on a whole face of the cube (base <i>a</i>²) with its tip one full edge above it (height <i>a</i>). Press <b>Compare</b>: turned the same way, all three are <b>identical</b>.',
+  s2_p3: 'Three equal parts make one cube, so each part is a third of it:',
+  s2_p4: 'That is the formula — so far for one special pyramid, where <i>h</i> = <i>a</i> and the tip sits above a corner.',
+  ctl_apart: 'Pull apart', btn_compare: 'Compare the pieces', btn_back: 'Put them back',
+  s3_k: 'Proof · step 2',
+  s3_t: 'Stretch it, slide it — still a third',
+  s3_p1: 'The cube gave us one special pyramid. Two moves turn it into <em>any</em> square pyramid, and neither move changes the ⅓.',
+  s3_p2: '<b>Stretch</b> (height slider). Make a solid <i>k</i> times taller and its volume gets <i>k</i> times bigger — the pyramid’s and the box’s alike. So the pyramid stays ⅓ of its box: ⅓ · <i>a</i>² · <i>h</i>.',
+  s3_p3: '<b>Slide</b> (tip slider). Cut both pyramids at the same height: the yellow cross-sections are always squares of the <b>same size</b>, wherever the tip is. Like a stack of coins pushed sideways — same slices, same volume. (That is <em>Cavalieri’s principle</em>.)',
+  ctl_h: 'Height', ctl_tip: 'Tip position', ctl_cut: 'Cut height',
+  tip_center: 'centred', tip_corner: 'above a corner', tip_off: 'off-centre', tip_out: 'outside the base',
+  lbl_cube: 'CUBE PIECE', lbl_stretched: 'STRETCHED CUBE PIECE', lbl_any: 'ANY TIP',
+  ro3a: 'Cut at <i>y</i> = {c} · <i>h</i> → both cross-sections are {s}<i>a</i> × {s}<i>a</i> = <b>{A} · <i>a</i>²</b>',
+  ro3b: 'Height <i>h</i> = {h} · <i>a</i> → each volume = ⅓ · <i>a</i>² · <i>h</i> = <b>{v} · <i>a</i>³</b>',
+  s4_k: 'Check by counting',
+  s4_t: 'Build it from stairs',
+  s4_p1: 'Cut the pyramid into <i>n</i> layers, each <i>h</i>/<i>n</i> thick, and replace every layer by a square slab. Going up, the sides shrink in equal steps: <i>a</i>, (<i>n</i>−1)/<i>n</i> · <i>a</i>, … , 1/<i>n</i> · <i>a</i>.',
+  s4_p2: 'Add up the slabs and all the <i>a</i>’s and <i>h</i>’s come out in front:',
+  s4_m1: '<i>V</i><sub>stairs</sub> = (1² + 2² + … + <i>n</i>²) / <i>n</i>³ · <i>a</i>²<i>h</i>',
+  s4_p3: 'The sum of squares has a known formula, 1² + … + <i>n</i>² = <i>n</i>(<i>n</i>+1)(2<i>n</i>+1)/6, which turns the fraction into',
+  s4_p4: 'The extra bits vanish as <i>n</i> grows. The outer stairs are always too big, the inner stairs always too small — and both close in on exactly ⅓.',
+  ctl_n: 'Layers <i>n</i>', mode_outer: 'Outer stairs', mode_inner: 'Inner stairs',
+  ro4_vol: 'Volume = {S} / {n}³ · <i>a</i>²<i>h</i> = <b>{f} · <i>a</i>²<i>h</i></b>',
+  ro4_above: '{d} more than ⅓ (too big)', ro4_below: '{d} less than ⅓ (too small)',
+  ch_big: 'outer stairs: too big', ch_small: 'inner stairs: too small',
+  s5_k: 'Summary',
+  s5_p1: 'Cube in three: ⅓. Stretching and sliding: still ⅓. Stairs from outside and inside: squeezed to ⅓. That holds for <b>every</b> pyramid with a square base.',
+  s5_p2: '<b>With calculus:</b> the slice at height <i>y</i> is a square of area <i>a</i>²(1 − <i>y</i>/<i>h</i>)², so',
+  s5_p3: '<b>Any base works:</b> triangle, hexagon, even a circle (a cone). Every slice shrinks the same way, so always <i>V</i> = ⅓ · <i>G</i> · <i>h</i>, with <i>G</i> the area of the base.',
+  footer: 'For teaching. One HTML file, works offline. Arrow keys rotate a focused figure.'
+},
+de: {
+  kicker: 'Geometrie · Volumen der quadratischen Pyramide',
+  title: 'Warum ist eine Pyramide genau ein Drittel?',
+  lede: 'Eine Pyramide fasst genau ⅓ des Quaders mit gleicher Grundfläche und gleicher Höhe. Ein Experiment zeigt, <em>dass</em> es stimmt – drei Bilder zeigen, <em>warum</em>. Jede Figur lässt sich mit der Maus drehen.',
+  lg_a: 'Seitenlänge der quadratischen Grundfläche',
+  lg_G: 'Grundfläche <i>G</i>',
+  lg_h: 'Höhe – senkrecht von der Grundfläche bis zur Spitze',
+  hint: 'ziehen zum Drehen',
+  s1_k: 'Die Behauptung',
+  s1_t: 'Drei Pyramiden voll Wasser füllen den Quader',
+  s1_p1: 'Nimm eine hohle Pyramide und einen Quader mit <b>gleicher quadratischer Grundfläche</b> und <b>gleicher Höhe</b>. Pyramide füllen, in den Quader leeren, wiederholen.',
+  s1_p2: 'Es braucht <b>genau drei</b> Pyramiden, bis der Quader voll ist. Der Quader fasst <i>a</i>² · <i>h</i>, eine Pyramide also ein Drittel davon:',
+  s1_m: '<i>V</i><sub>Pyramide</sub> = ⅓ · <i>V</i><sub>Quader</sub> = ⅓ · <i>a</i>² · <i>h</i>',
+  s1_p3: 'Achte auf den Wasserstand beim Füllen: Er steigt erst langsam, dann immer schneller – und beim Ausleeren sinkt er erst schnell, dann langsam. Der Großteil des Volumens sitzt unten bei der Grundfläche, die Spitze fasst fast nichts. Das Experiment zeigt, <em>dass</em> es stimmt – die nächsten drei Abschnitte zeigen, <em>warum</em>.',
+  btn_play: 'Abspielen', btn_pause: 'Pause', btn_restart: 'Neu starten',
+  pour_fill: 'Pyramide {k} von 3 wird gefüllt', pour_drain: 'Pyramide {k} von 3 wird umgeleert', pour_rest: '{k} von 3 umgeleert',
+  pour_done: '3 Pyramiden = 1 Quader', pour_box: 'Quader zu {p} % voll',
+  lbl_pyr: 'PYRAMIDE', lbl_box: 'QUADER',
+  s2_k: 'Beweis · Schritt 1',
+  s2_t: 'Drei gleiche Pyramiden ergeben einen Würfel',
+  s2_p1: 'Markiere eine Ecke des Würfels (der schwarze Punkt). Verbinde sie mit den drei Seitenflächen, die sie <em>nicht</em> berühren. Das zerlegt den Würfel in drei Pyramiden: <span class="sw" style="--c:var(--blue)"></span>blau, <span class="sw" style="--c:var(--red)"></span>rot und <span class="sw" style="--c:var(--yellow)"></span>gelb.',
+  s2_p2: 'Jede steht auf einer ganzen Würfelfläche (Grundfläche <i>a</i>²), ihre Spitze liegt eine ganze Kante darüber (Höhe <i>a</i>). Drück auf <b>Vergleichen</b>: gleich gedreht sind alle drei <b>deckungsgleich</b>.',
+  s2_p3: 'Drei gleiche Teile ergeben einen Würfel, also ist jeder Teil ein Drittel davon:',
+  s2_p4: 'Das ist schon die Formel – vorerst für eine spezielle Pyramide mit <i>h</i> = <i>a</i>, deren Spitze über einer Ecke liegt.',
+  ctl_apart: 'Auseinander', btn_compare: 'Teile vergleichen', btn_back: 'Wieder zusammensetzen',
+  s3_k: 'Beweis · Schritt 2',
+  s3_t: 'Strecken, verschieben – bleibt ein Drittel',
+  s3_p1: 'Der Würfel lieferte eine spezielle Pyramide. Zwei Schritte machen daraus <em>jede</em> quadratische Pyramide – und keiner ändert das ⅓.',
+  s3_p2: '<b>Strecken</b> (Regler Höhe). Wird ein Körper <i>k</i>-mal so hoch, wird sein Volumen <i>k</i>-mal so groß – bei Pyramide und Quader gleichermaßen. Die Pyramide bleibt also ⅓ ihres Quaders: ⅓ · <i>a</i>² · <i>h</i>.',
+  s3_p3: '<b>Verschieben</b> (Regler Spitze). Schneide beide Pyramiden in derselben Höhe: Die gelben Schnittflächen sind immer <b>gleich große</b> Quadrate, egal wo die Spitze liegt. Wie ein schräg geschobener Münzstapel – gleiche Scheiben, gleiches Volumen. (Das ist das <em>Prinzip von Cavalieri</em>.)',
+  ctl_h: 'Höhe', ctl_tip: 'Lage der Spitze', ctl_cut: 'Schnitthöhe',
+  tip_center: 'mittig', tip_corner: 'über einer Ecke', tip_off: 'außermittig', tip_out: 'außerhalb der Grundfläche',
+  lbl_cube: 'WÜRFELTEIL', lbl_stretched: 'GESTRECKTES WÜRFELTEIL', lbl_any: 'SPITZE BELIEBIG',
+  ro3a: 'Schnitt bei <i>y</i> = {c} · <i>h</i> → beide Schnittflächen sind {s}<i>a</i> × {s}<i>a</i> = <b>{A} · <i>a</i>²</b>',
+  ro3b: 'Höhe <i>h</i> = {h} · <i>a</i> → beide Volumen = ⅓ · <i>a</i>² · <i>h</i> = <b>{v} · <i>a</i>³</b>',
+  s4_k: 'Nachrechnen',
+  s4_t: 'Aus Treppenstufen bauen',
+  s4_p1: 'Zerschneide die Pyramide in <i>n</i> Schichten der Dicke <i>h</i>/<i>n</i> und ersetze jede durch eine quadratische Platte. Nach oben schrumpfen die Seiten in gleichen Schritten: <i>a</i>, (<i>n</i>−1)/<i>n</i> · <i>a</i>, … , 1/<i>n</i> · <i>a</i>.',
+  s4_p2: 'Zählt man die Platten zusammen, wandern alle <i>a</i> und <i>h</i> nach vorne:',
+  s4_m1: '<i>V</i><sub>Treppe</sub> = (1² + 2² + … + <i>n</i>²) / <i>n</i>³ · <i>a</i>²<i>h</i>',
+  s4_p3: 'Für die Quadratsumme gibt es eine Formel, 1² + … + <i>n</i>² = <i>n</i>(<i>n</i>+1)(2<i>n</i>+1)/6. Damit wird der Bruch zu',
+  s4_p4: 'Die Zusatzteile verschwinden, wenn <i>n</i> wächst. Die äußere Treppe ist immer zu groß, die innere immer zu klein – und beide schließen genau ⅓ ein.',
+  ctl_n: 'Schichten <i>n</i>', mode_outer: 'Äußere Treppe', mode_inner: 'Innere Treppe',
+  ro4_vol: 'Volumen = {S} / {n}³ · <i>a</i>²<i>h</i> = <b>{f} · <i>a</i>²<i>h</i></b>',
+  ro4_above: '{d} mehr als ⅓ (zu groß)', ro4_below: '{d} weniger als ⅓ (zu klein)',
+  ch_big: 'äußere Treppe: zu groß', ch_small: 'innere Treppe: zu klein',
+  s5_k: 'Zusammenfassung',
+  s5_p1: 'Würfel in drei Teile: ⅓. Strecken und Verschieben: weiterhin ⅓. Treppen von außen und innen: eingeschlossen auf ⅓. Das gilt für <b>jede</b> Pyramide mit quadratischer Grundfläche.',
+  s5_p2: '<b>Mit Integralrechnung:</b> Die Schnittfläche in Höhe <i>y</i> ist ein Quadrat mit Fläche <i>a</i>²(1 − <i>y</i>/<i>h</i>)², also',
+  s5_p3: '<b>Jede Grundfläche geht:</b> Dreieck, Sechseck, sogar ein Kreis (Kegel). Jede Schicht schrumpft gleich, also immer <i>V</i> = ⅓ · <i>G</i> · <i>h</i>, wobei <i>G</i> die Grundfläche ist.',
+  footer: 'Für den Unterricht. Eine einzige HTML-Datei, funktioniert offline. Pfeiltasten drehen eine ausgewählte Figur.'
+}};
+
+let lang = (() => {
+  try { const s = localStorage.getItem('pyr-lang'); if (s === 'en' || s === 'de') return s; } catch (e) {}
+  return (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
+})();
+const tr = (k, vars) => {
+  let s = (STR[lang] && STR[lang][k]) ?? STR.en[k] ?? k;
+  if (vars) for (const [kk, v] of Object.entries(vars)) s = s.split('{' + kk + '}').join(v);
+  return s;
+};
+const fmt = (x, d) => { const s = x.toFixed(d); return lang === 'de' ? s.replace('.', ',') : s; };
+const onLang = [];
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = tr('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = tr(el.dataset.i18n); });
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  onLang.forEach(f => f());
+}
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+  lang = b.dataset.lang; try { localStorage.setItem('pyr-lang', lang); } catch (e) {}
+  applyLang();
+}));
+
+/* ------------------------------------------------------------------ math */
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const norm = a => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerp3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const avg = pts => mul(pts.reduce((s, p) => add(s, p), [0, 0, 0]), 1 / pts.length);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const sine = p => 0.5 - 0.5 * Math.cos(Math.PI * p);
+// quaternions [w,x,y,z]
+const qAxis = (ax, ang) => { const s = Math.sin(ang / 2), n = norm(ax); return [Math.cos(ang / 2), n[0] * s, n[1] * s, n[2] * s]; };
+const qMul = (a, b) => [
+  a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+  a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+  a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+  a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]];
+const qRot = (q, v) => { const r = qMul(qMul(q, [0, v[0], v[1], v[2]]), [q[0], -q[1], -q[2], -q[3]]); return [r[1], r[2], r[3]]; };
+const qSlerp = (a, b, t) => {
+  let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3], bb = b;
+  if (d < 0) { d = -d; bb = b.map(x => -x); }
+  if (d > 0.9995) { const r = a.map((x, i) => x + (bb[i] - x) * t); const l = Math.hypot(...r); return r.map(x => x / l); }
+  const th = Math.acos(d), s = Math.sin(th), wa = Math.sin((1 - t) * th) / s, wb = Math.sin(t * th) / s;
+  return a.map((x, i) => x * wa + bb[i] * wb);
+};
+
+/* ------------------------------------------------------------------ colours */
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const shade = (c, k) => k <= 1 ? c.map(x => x * k) : c.map(x => x + (255 - x) * (k - 1));
+const INK = hex('#1f1c18'), MUTED = hex('#6d6558'), STAGE = hex('#ebe4d4'),
+      RED = hex('#c0513b'), BLUE = hex('#2b6390'), YEL = hex('#dfa42f'), WATER = hex('#3b88c6');
+const cssv = getComputedStyle(document.documentElement);
+const SERIF = cssv.getPropertyValue('--serif').trim() || 'serif';
+const SANS = cssv.getPropertyValue('--sans').trim() || 'sans-serif';
+
+/* ------------------------------------------------------------------ geometry */
+const sqr = (cx, y, s, cz = 0) => [[cx - s, y, cz - s], [cx + s, y, cz - s], [cx + s, y, cz + s], [cx - s, y, cz + s]];
+const BOXF = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
+const PYRF = [[0, 1, 2, 3], [0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4]];
+const boxMesh = (x0, y0, z0, x1, y1, z1, o) => ({ verts: [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], faces: BOXF, ...o });
+const pyrMesh = (base, apex, o) => ({ verts: [...base, apex], faces: PYRF, ...o });
+const frustMesh = (bot, top, o) => ({ verts: [...bot, ...top], faces: BOXF, ...o });
+
+/* ------------------------------------------------------------------ view */
+const views = [];
+class View {
+  constructor(cv, o) {
+    this.cv = cv; this.ctx = cv.getContext('2d'); this.o = o;
+    this.yaw = o.yaw; this.pitch = o.pitch; this.dist = o.dist; this.target = o.target.slice();
+    this.radius = o.radius; this.fit = o.fit || 1.45;
+    this.minP = o.minPitch ?? 0.16; this.maxP = o.maxPitch ?? 1.3;
+    this.draw = o.draw; this.w = 1; this.h = 1; this.dpr = 1; this._raf = 0; this.touched = false;
+    this.zoom = 1; this.measure = false; this.ext = [Infinity, Infinity, -Infinity, -Infinity];
+    views.push(this);
+    let drag = null;
+    const touch = () => { this.touched = true; cv.parentElement.classList.add('touched'); };
+    cv.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      drag = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+      cv.classList.add('grabbing'); touch();
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+      this.yaw -= dx * 0.0085; this.pitch = clamp(this.pitch + dy * 0.006, this.minP, this.maxP); this.request();
+    });
+    const end = e => { if (drag && e.pointerId === drag.id) { drag = null; cv.classList.remove('grabbing'); } };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('lostpointercapture', end);
+    cv.tabIndex = 0;
+    cv.addEventListener('keydown', e => {
+      const s = 0.1;
+      if (e.key === 'ArrowLeft') this.yaw += s; else if (e.key === 'ArrowRight') this.yaw -= s;
+      else if (e.key === 'ArrowUp') this.pitch = clamp(this.pitch + s * .7, this.minP, this.maxP);
+      else if (e.key === 'ArrowDown') this.pitch = clamp(this.pitch - s * .7, this.minP, this.maxP);
+      else return;
+      e.preventDefault(); touch(); this.request();
+    });
+    new ResizeObserver(() => this.resize()).observe(cv);
+  }
+  resize() {
+    const r = this.cv.getBoundingClientRect(); if (r.width < 2) return;
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2); this.w = r.width; this.h = r.height;
+    this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr); this.render();
+  }
+  request() { if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = 0; this.render(); }); }
+  camera() {
+    const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch), T = this.target;
+    this.cam = [T[0] + this.dist * cp * Math.sin(this.yaw), T[1] + this.dist * sp, T[2] + this.dist * cp * Math.cos(this.yaw)];
+    this.f = norm(sub(T, this.cam)); this.r = norm(cross(this.f, [0, 1, 0])); this.u = cross(this.r, this.f);
+    this.focal = Math.min(this.w, this.h * this.fit) / 2 * this.dist / this.radius * this.zoom;
+    this.cx = this.w / 2; this.cy = this.h / 2 + (this.o.yShift || 0) * this.h;
+  }
+  proj(p) {
+    const d = sub(p, this.cam), z = Math.max(dot(d, this.f), 0.05), s = this.focal / z;
+    const x = this.cx + dot(d, this.r) * s, y = this.cy - dot(d, this.u) * s;
+    if (this.measure) this.extend(x, y, x, y);
+    return [x, y, z];
+  }
+  extend(x0, y0, x1, y1) { const e = this.ext; if (x0 < e[0]) e[0] = x0; if (y0 < e[1]) e[1] = y0; if (x1 > e[2]) e[2] = x1; if (y1 > e[3]) e[3] = y1; }
+  // Auto-fit: every projected point and label box is recorded while drawing (ground grid and shadows
+  // excluded). If the frame would overflow, the focal length is scaled down exactly and the frame is
+  // redrawn once; at the default views nothing changes, when turned to extreme angles it zooms out
+  // instead of clipping. The zoom grows back (up to 1) as soon as there is room again.
+  render() {
+    const c = this.ctx, M = 8;
+    for (let pass = 0; pass < 3; pass++) {
+      c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.clearRect(0, 0, this.w, this.h); this.camera();
+      this.ext = [Infinity, Infinity, -Infinity, -Infinity]; this.measure = true;
+      this.draw(this, c); this.measure = false;
+      const e = this.ext; if (!isFinite(e[0])) break;
+      const need = Math.max((this.cx - e[0]) / (this.cx - M), (e[2] - this.cx) / (this.w - this.cx - M),
+                            (this.cy - e[1]) / (this.cy - M), (e[3] - this.cy) / (this.h - this.cy - M), 1e-6);
+      const z = Math.min(1, this.zoom / need);       // screen offsets scale linearly with focal, so this is exact
+      if (Math.abs(z - this.zoom) < 0.003) break;
+      this.zoom = z;
+    }
+  }
+}
+onLang.push(() => views.forEach(v => v.request()));
+
+/* ------------------------------------------------------------------ drawing */
+const LDIR = norm([-0.42, 0.8, 0.45]);
+function prep(V, m) {
+  const P = m.verts.map(p => V.proj(p)), C = avg(m.verts);
+  const F = m.faces.map((f, i) => {
+    const pts = f.map(j => m.verts[j]), fc = avg(pts);
+    let n = [0, 0, 0];
+    for (let k = 0; k < pts.length; k++) {           // Newell normal: robust for quads and collapsed edges
+      const a = pts[k], b = pts[(k + 1) % pts.length];
+      n[0] += (a[1] - b[1]) * (a[2] + b[2]); n[1] += (a[2] - b[2]) * (a[0] + b[0]); n[2] += (a[0] - b[0]) * (a[1] + b[1]);
+    }
+    const l = len(n); if (l < 1e-9) return { f, i, deg: true };
+    n = mul(n, 1 / l); if (dot(n, sub(fc, C)) < 0) n = mul(n, -1);
+    return { f, i, n, fc, front: dot(n, sub(V.cam, fc)) > 0 };
+  });
+  return { P, F };
+}
+function fillOf(V, m, fc) {
+  const n = fc.n, nv = [dot(n, V.r), dot(n, V.u), -dot(n, V.f)];
+  const d = Math.max(0, dot(nv, LDIR));
+  const base = (m.faceColors && m.faceColors[fc.i]) || m.color;
+  return shade(base, 0.68 + 0.42 * d);
+}
+function polyPath(c, P, f) { c.beginPath(); f.forEach((j, k) => k ? c.lineTo(P[j][0], P[j][1]) : c.moveTo(P[j][0], P[j][1])); c.closePath(); }
+function edgesOf(m) {
+  const map = new Map();
+  m.faces.forEach((f, fi) => f.forEach((a, k) => {
+    const b = f[(k + 1) % f.length], lo = Math.min(a, b), hi = Math.max(a, b), key = lo + '_' + hi;
+    if (!map.has(key)) map.set(key, { a: lo, b: hi, faces: [] });
+    map.get(key).faces.push(fi);
+  }));
+  return [...map.values()];
+}
+// pass: 'all' (opaque: front faces; translucent: back then front), 'back' or 'front' (for glass shells)
+function drawMesh(V, m, pass = 'all') {
+  const c = V.ctx, { P, F } = prep(V, m), A = m.alpha ?? 1;
+  const faces = F.filter(f => !f.deg && (pass === 'all' ? (A < 1 || f.front) : pass === 'back' ? !f.front : f.front));
+  faces.sort((a, b) => (a.front ? 1 : 0) - (b.front ? 1 : 0));
+  for (const fc of faces) {
+    const a = A * (fc.front ? 1 : (m.backK ?? 0.7)); if (a < 0.002) continue;
+    const col = fillOf(V, m, fc); polyPath(c, P, fc.f);
+    c.fillStyle = rgba(col, a); c.fill();
+    if (A >= 1) { c.strokeStyle = rgba(col, 1); c.lineWidth = 0.8; c.stroke(); }
+  }
+  if ((m.edgeWidth ?? 1.5) > 0) drawEdges(V, m, P, F, pass);
+}
+function drawEdges(V, m, P, F, pass) {
+  const c = V.ctx, w = m.edgeWidth ?? 1.5, col = m.edgeColor || INK, ea = m.edgeAlpha ?? 1;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const e of edgesOf(m)) {
+    const vis = e.faces.some(fi => F[fi] && !F[fi].deg && F[fi].front);
+    let st = null;
+    if (pass === 'back') { if (!vis) st = { a: ea * 0.33, w: w * 0.8 }; }
+    else if (vis) st = { a: ea, w, dash: m.dash };
+    else if (pass === 'all' && m.hidden === 'dashed') st = { a: ea * 0.5, w: w * 0.75, dash: [5, 5] };
+    if (!st) continue;
+    c.beginPath(); c.moveTo(P[e.a][0], P[e.a][1]); c.lineTo(P[e.b][0], P[e.b][1]);
+    c.setLineDash(st.dash || []); c.strokeStyle = rgba(col, st.a); c.lineWidth = st.w; c.stroke();
+  }
+  c.setLineDash([]);
+}
+function drawGround(V, y, ext, step, cx = 0, cz = 0) {
+  const c = V.ctx, N = Math.round(2 * ext / step), was = V.measure; V.measure = false;   // the floor may run past the frame
+  c.lineWidth = 1;
+  for (let i = 0; i <= N; i++) {
+    const g = -ext + i * step;
+    for (const along of [0, 1]) for (let j = 0; j < N; j++) {
+      const s0 = -ext + j * step, s1 = s0 + step, r = Math.hypot(g, (s0 + s1) / 2) / ext;
+      if (r >= 1) continue;
+      const p0 = along ? [cx + g, y, cz + s0] : [cx + s0, y, cz + g], p1 = along ? [cx + g, y, cz + s1] : [cx + s1, y, cz + g];
+      const a = V.proj(p0), b = V.proj(p1);
+      c.strokeStyle = rgba(INK, 0.1 * (1 - r * r)); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+    }
+  }
+  V.measure = was;
+}
+function hull2(pts) {
+  const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (p.length < 3) return p;
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+function drawShadow(V, verts, y, alpha = 0.16) {   // light from front-left-above, cast onto the ground plane
+  const h = hull2(verts.map(v => { const k = v[1] - y; return [v[0] + 0.32 * k, v[2] - 0.22 * k]; }));
+  const c = V.ctx, was = V.measure; V.measure = false;   // a shadow may fade out past the frame
+  c.save();
+  if ('filter' in c) c.filter = 'blur(6px)'; else alpha *= 0.55;   // no canvas filter (older Safari): soft alpha instead of a hard-edged blob
+  c.fillStyle = rgba(INK, alpha); c.beginPath();
+  h.forEach((p, i) => { const q = V.proj([p[0], y, p[1]]); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); });
+  c.closePath(); c.fill(); c.restore(); V.measure = was;
+}
+function label(V, p, text, o = {}) {
+  const q = V.proj(p), c = V.ctx, sz = o.size || 17;
+  c.font = `${o.italic ? 'italic ' : ''}${o.weight || 600} ${sz}px ${o.sans ? SANS : SERIF}`;
+  if ('letterSpacing' in c) c.letterSpacing = o.sans ? '0.09em' : '0px';
+  c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  const x = q[0] + (o.dx || 0), y = q[1] + (o.dy || 0);
+  if (V.measure) { const w = c.measureText(text).width, x0 = c.textAlign === 'left' ? x : c.textAlign === 'right' ? x - w : x - w / 2; V.extend(x0 - 3, y - sz * 0.6, x0 + w + 3, y + sz * 0.6); }
+  c.lineJoin = 'round'; c.lineWidth = o.halo ?? 5; c.strokeStyle = rgba(STAGE, 0.92); c.strokeText(text, x, y);
+  c.fillStyle = rgba(o.color || INK, o.alpha ?? 1); c.fillText(text, x, y);
+  if ('letterSpacing' in c) c.letterSpacing = '0px';
+}
+function line3(V, p0, p1, o = {}) {
+  const c = V.ctx, a = V.proj(p0), b = V.proj(p1);
+  c.setLineDash(o.dash || []); c.strokeStyle = rgba(o.color || INK, o.alpha ?? 1); c.lineWidth = o.w || 1.2;
+  c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); c.setLineDash([]);
+}
+function dot3(V, p, r = 5, col = INK) {
+  const c = V.ctx, q = V.proj(p); c.beginPath(); c.arc(q[0], q[1], r + 2, 0, 7); c.fillStyle = rgba(STAGE, 0.95); c.fill();
+  c.beginPath(); c.arc(q[0], q[1], r, 0, 7); c.fillStyle = rgba(col); c.fill();
+}
+// label the base edges nearest to the camera, pushed outward from the base centre
+function edgeLabels(V, base, txt, count = 2, push = 0.3) {
+  const C = avg(base);
+  base.map((p, i) => {
+    const m = lerp3(p, base[(i + 1) % base.length], 0.5);
+    return { m: add(m, mul(norm(sub(m, C)), push)), d: len(sub(V.cam, m)) };
+  }).sort((x, y) => x.d - y.d).slice(0, count).forEach(o => label(V, o.m, txt, { italic: true, size: 19 }));
+}
+// a dimension line along the screen-rightmost vertical edge of a box-like footprint
+function heightDim(V, base, h, txt) {
+  const C = avg(base); let best = null;
+  for (const p of base) { const q = V.proj(p); if (!best || q[0] > best.q[0]) best = { p, q }; }
+  const out = mul(norm(sub([best.p[0], 0, best.p[2]], [C[0], 0, C[2]])), 0.32);
+  const p0 = add(best.p, out), p1 = add(p0, [0, h, 0]);
+  line3(V, p0, p1, { w: 1.2, alpha: 0.75 });
+  for (const p of [p0, p1]) line3(V, add(p, mul(out, -0.25)), add(p, mul(out, 0.25)), { w: 1.2, alpha: 0.75 });
+  label(V, lerp3(p0, p1, 0.5), txt, { italic: true, size: 19, dx: 14, align: 'left' });
+}
+function tween(from, to, ms, fn) {
+  return new Promise(res => {
+    if (reduceMotion) { fn(to); res(); return; }
+    const t0 = performance.now();
+    const step = now => { const p = Math.min(1, (now - t0) / ms); fn(from + (to - from) * ease(p)); p < 1 ? requestAnimationFrame(step) : res(); };
+    requestAnimationFrame(step);
+  });
+}
+function whenVisible(el, cb) {
+  new IntersectionObserver(es => es.forEach(e => cb(e.isIntersecting)), { threshold: 0.3 }).observe(el);
+}
+const GLASS = { color: INK, alpha: 0.05, backK: 1, edgeColor: INK, edgeWidth: 1.5 };
+const WATER_M = { color: WATER, alpha: 0.84, backK: 0.55, edgeColor: shade(WATER, 0.55), edgeWidth: 0.9, faceColors: { 1: shade(WATER, 1.25) } };
+
+/* ================================================================== HERO: pyramid in its box */
+(() => {
+  const s = 1, h = 2.2, base = sqr(0, 0, s), apex = [0, h, 0];
+  const v = new View($('#cv-hero'), {
+    yaw: 0.62, pitch: 0.36, dist: 10, target: [0, 0.95, 0], radius: 2.25, fit: 1.25,
+    draw(V) {
+      drawGround(V, 0, 3.5, 0.5);
+      drawShadow(V, [...base, apex], 0);
+      const glass = boxMesh(-s, 0, -s, s, h, s, GLASS);
+      drawMesh(V, glass, 'back');
+      drawMesh(V, pyrMesh(base, apex, { color: YEL, edgeWidth: 1.6 }), 'all');
+      drawMesh(V, glass, 'front');
+      line3(V, apex, [0, 0, 0], { dash: [3, 4], alpha: 0.6 });
+      dot3(V, [0, 0, 0], 2.5);
+      edgeLabels(V, base, 'a', 2, 0.32);
+      heightDim(V, base, h, 'h');
+    }
+  });
+  let on = false, last = 0, loop = 0;
+  const spin = (id, now) => { if (!on || v.touched || id !== loop) return; v.yaw += Math.min(0.05, (now - last) / 1000) * 0.18; last = now; v.request(); requestAnimationFrame(n => spin(id, n)); };
+  whenVisible(v.cv, vis => { on = vis && !reduceMotion; if (on) { last = performance.now(); const id = ++loop; requestAnimationFrame(n => spin(id, n)); } });
+})();
+
+/* ================================================================== 1: pour experiment */
+const pour = (() => {
+  const s = 1, h = 2.4, PX = -1.9, BX = 1.9;
+  const pBase = sqr(PX, 0, s), apex = [PX, h, 0];
+  const seg = [];
+  for (let k = 0; k < 3; k++) seg.push({ ty: 'fill', k, d: 1.0 }, { ty: 'drain', k, d: 2.4 }, { ty: 'rest', k, d: 0.45 });
+  seg.push({ ty: 'done', k: 2, d: 3.0 });
+  const total = seg.reduce((q, x) => q + x.d, 0);
+  function at(time) {
+    let acc = 0;
+    for (const g of seg) {
+      if (time < acc + g.d) {
+        const p = (time - acc) / g.d;
+        if (g.ty === 'fill') return { pf: sine(p), bf: g.k / 3, k: g.k, ph: 'fill' };
+        if (g.ty === 'drain') { const e = sine(p); return { pf: 1 - e, bf: (g.k + e) / 3, k: g.k, ph: 'drain' }; }
+        if (g.ty === 'rest') return { pf: 0, bf: (g.k + 1) / 3, k: g.k, ph: 'rest' };
+        return { pf: 0, bf: 1, k: 2, ph: 'done' };
+      }
+      acc += g.d;
+    }
+    return { pf: 0, bf: 1, k: 2, ph: 'done' };
+  }
+  const S = { time: reduceMotion ? 2.2 : 0.5, playing: false, userPaused: false, last: 0, visible: false };
+
+  function drawPyr(V, st) {
+    const g = pyrMesh(pBase, apex, GLASS);
+    drawMesh(V, g, 'back');
+    if (st.pf > 0.003) {
+      const L = 1 - Math.cbrt(1 - Math.min(st.pf, 0.99999));   // water height for a given volume fraction
+      drawMesh(V, frustMesh(pBase, pBase.map(p => lerp3(p, apex, L)), WATER_M), 'all');
+    }
+    drawMesh(V, g, 'front');
+    edgeLabels(V, pBase, 'a', 1, 0.3);
+    label(V, [PX, 0, s + 0.62], tr('lbl_pyr'), { sans: true, size: 12, color: MUTED });
+  }
+  function drawBox(V, st) {
+    const g = boxMesh(BX - s, 0, -s, BX + s, h, s, GLASS);
+    drawMesh(V, g, 'back');
+    if (st.bf > 0.003) drawMesh(V, boxMesh(BX - s, 0, -s, BX + s, h * st.bf, s, WATER_M), 'all');
+    drawMesh(V, g, 'front');
+    const c = V.ctx;
+    for (const [fr, txt] of [[1 / 3, '⅓'], [2 / 3, '⅔'], [1, '1']]) {
+      const ring = sqr(BX, h * fr, s), pr = ring.map(p => V.proj(p));
+      if (fr < 1) {
+        c.setLineDash([4, 4]); c.strokeStyle = rgba(INK, 0.5); c.lineWidth = 1.1; c.beginPath();
+        pr.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.closePath(); c.stroke(); c.setLineDash([]);
+      }
+      let bi = 0; pr.forEach((q, i) => { if (q[0] > pr[bi][0]) bi = i; });
+      label(V, ring[bi], txt, { dx: 16, align: 'left', size: 19 });
+    }
+    edgeLabels(V, sqr(BX, 0, s), 'a', 1, 0.3);
+    label(V, [BX, 0, s + 0.62], tr('lbl_box'), { sans: true, size: 12, color: MUTED });
+  }
+  function drawArc(V, st) {
+    const c = V.ctx, p0 = V.proj([PX + 0.3, h + 0.35, 0]), p1 = V.proj([BX - 0.4, h + 0.35, 0]), m = V.proj([0, h + 1.2, 0]);
+    const qx = 2 * m[0] - (p0[0] + p1[0]) / 2, qy = 2 * m[1] - (p0[1] + p1[1]) / 2;
+    const active = st.ph === 'drain', col = active ? rgba(WATER, 0.95) : rgba(INK, 0.38);
+    c.setLineDash(active ? [] : [5, 6]); c.strokeStyle = col; c.lineWidth = active ? 2.6 : 1.4;
+    c.beginPath(); c.moveTo(p0[0], p0[1]); c.quadraticCurveTo(qx, qy, p1[0], p1[1]); c.stroke(); c.setLineDash([]);
+    const dx = p1[0] - qx, dy = p1[1] - qy, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, A = 11;
+    c.fillStyle = col; c.beginPath(); c.moveTo(p1[0], p1[1]);
+    c.lineTo(p1[0] - ux * A - uy * A * .5, p1[1] - uy * A + ux * A * .5); c.lineTo(p1[0] - ux * A + uy * A * .5, p1[1] - uy * A - ux * A * .5); c.fill();
+    label(V, [0, h + 1.2, 0], '× 3', { dy: -13, size: 20 });
+  }
+  const v = new View($('#cv-pour'), {
+    yaw: 0.42, pitch: 0.34, dist: 13, target: [0, 1.4, 0], radius: 3.75, fit: 1.45,
+    draw(V) {
+      const st = at(S.time);
+      drawGround(V, 0, 5.5, 0.5);
+      drawShadow(V, [...pBase, apex], 0); drawShadow(V, boxMesh(BX - s, 0, -s, BX + s, h, s).verts, 0);
+      if (V.cam[0] > 0) { drawPyr(V, st); drawBox(V, st); } else { drawBox(V, st); drawPyr(V, st); }
+      drawArc(V, st);
+      status(st);
+    }
+  });
+  const btn = $('#pour-play');
+  function status(st) {
+    const k = st.k + 1, main = st.ph === 'done' ? tr('pour_done') : tr('pour_' + st.ph, { k }), sub = tr('pour_box', { p: Math.round(st.bf * 100) });
+    if (main !== S.mainTxt) { S.mainTxt = main; $('#pour-main').innerHTML = main; }   // write only on change: no per-frame DOM churn / live-region spam
+    if (sub !== S.subTxt) { S.subTxt = sub; $('#pour-sub').textContent = sub; }
+  }
+  const updBtn = () => { btn.textContent = tr(S.playing ? 'btn_pause' : 'btn_play'); };
+  function tick(id, now) {
+    if (!S.playing || id !== S.loop) return;          // a stale loop from an earlier play() just stops
+    S.time += Math.min(0.05, (now - S.last) / 1000); S.last = now;
+    if (S.time > total) S.time = 0;
+    v.request(); requestAnimationFrame(n => tick(id, n));
+  }
+  function play() { if (S.playing) return; S.playing = true; S.last = performance.now(); const id = S.loop = (S.loop || 0) + 1; requestAnimationFrame(n => tick(id, n)); updBtn(); }
+  function pause() { S.playing = false; updBtn(); }
+  btn.addEventListener('click', () => { if (S.playing) { S.userPaused = true; pause(); } else { S.userPaused = false; play(); } });
+  $('#pour-restart').addEventListener('click', () => { S.time = 0; S.userPaused = false; play(); v.request(); });
+  whenVisible(v.cv, vis => { S.visible = vis; if (vis && !S.userPaused && !reduceMotion) play(); else if (!vis) pause(); });
+  onLang.push(updBtn);
+  return { S, v, total, at, play, pause };
+})();
+
+/* ================================================================== 2: cube = 3 pyramids */
+const cube = (() => {
+  const A = [1, 1, -1];                       // the shared corner (apex of all three)
+  const pieces = [
+    { id: 'L', color: RED,  base: [[-1, -1, -1], [-1, 1, -1], [-1, 1, 1], [-1, -1, 1]], dir: [-1, 0, 0],
+      q: qMul(qAxis([0, 1, 0], -Math.PI / 2), qAxis([0, 0, 1], Math.PI / 2)), dx: -3.1 },
+    { id: 'B', color: BLUE, base: [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1]], dir: [0, 0, 0], q: [1, 0, 0, 0], dx: 0 },
+    { id: 'F', color: YEL,  base: [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]], dir: [0, 0, 1],
+      q: qMul(qAxis([0, 1, 0], Math.PI / 2), qAxis([1, 0, 0], Math.PI / 2)), dx: 3.1 },
+  ];
+  pieces.forEach(p => { p.verts = [...p.base, A]; p.c = avg(p.verts); });
+  const cB = pieces[1].c;
+  const S = { ex: 0.22, u: 0 };
+  function placed(p) {
+    const q = qSlerp([1, 0, 0, 0], p.q, S.u);
+    const s0 = add(p.c, mul(p.dir, S.ex * 1.5)), t0 = add(cB, [p.dx, 0, 0]);
+    const ux = ease(clamp(S.u / 0.55, 0, 1)), uz = ease(clamp((S.u - 0.4) / 0.6, 0, 1));
+    const hop = p.dx ? 1.0 * Math.sin(Math.PI * S.u) : 0;          // lift while turning so nothing sinks into the floor
+    const ctr = [lerp(s0[0], t0[0], ux), lerp(s0[1], t0[1], S.u) + hop, lerp(s0[2], t0[2], uz)];
+    return p.verts.map(v => add(ctr, qRot(q, sub(v, p.c))));
+  }
+  // assembled/exploded: exact painter order from the three separating planes through the cube diagonal
+  function order(V, list) {
+    if (S.u < 0.001) {
+      const c = sub(V.cam, [0, 0, 0]), s1 = c[0] - c[1], s2 = c[1] + c[2], s3 = c[0] + c[2];
+      const first = { LB: s1 > 0, BL: !(s1 > 0), BF: s2 > 0, FB: !(s2 > 0), LF: s3 > 0, FL: !(s3 > 0) };
+      return list.sort((x, y) => first[x.id + y.id] ? -1 : 1);
+    }
+    return list.sort((x, y) => len(sub(V.cam, avg(y.verts))) - len(sub(V.cam, avg(x.verts))));
+  }
+  const v = new View($('#cv-cube'), {
+    yaw: 0.62, pitch: 0.42, dist: 12, target: [0, -0.15, 0], radius: 2.9, fit: 1.45,
+    draw(V) {
+      drawGround(V, -1, 6, 0.5);
+      const list = pieces.map(p => ({ id: p.id, p, verts: placed(p) }));
+      list.forEach(o => drawShadow(V, o.verts, -1, 0.13));
+      const ga = Math.min(1, S.ex * 4) * (1 - S.u);
+      if (ga > 0.01) drawMesh(V, boxMesh(-1, -1, -1, 1, 1, 1, { color: INK, alpha: 0, edgeColor: INK, edgeAlpha: 0.45 * ga, edgeWidth: 1.1, dash: [4, 5] }), 'all');
+      order(V, list).forEach(o => drawMesh(V, pyrMesh(o.verts.slice(0, 4), o.verts[4], { color: o.p.color, edgeWidth: 1.5 }), 'all'));
+      if (S.u < 0.98) dot3(V, A, 5.5 * (1 - S.u));
+      // B never moves: label its base edge and its height (the vertical edge under the shared corner)
+      label(V, [0, -1, 1.38], 'a', { italic: true, size: 19 });
+      label(V, [1, 0, -1], 'a', { italic: true, size: 19, dx: 16, align: 'left' });
+    }
+  });
+  const sl = $('#cube-ex'), out = $('#cube-ex-o'), btn = $('#cube-cmp');
+  function cam() {
+    const k = Math.min(1, S.u * 1.8);
+    v.radius = lerp(lerp(2.75, 3.7, S.ex), 5.1, k);
+    v.target = lerp3([0, -0.15, 0.2 * S.ex], [0.2, -0.3, -0.2], k);
+    out.textContent = Math.round(S.ex * 100) + ' %';
+    v.request();
+  }
+  sl.addEventListener('input', () => { S.ex = sl.value / 100; cam(); });
+  const updBtn = () => { btn.textContent = tr(S.u > 0.5 ? 'btn_back' : 'btn_compare'); };
+  let busy = false;
+  btn.addEventListener('click', async () => {
+    if (busy) return; busy = true;
+    if (S.u > 0.5) {
+      await tween(S.u, 0, 1400, x => { S.u = x; cam(); }); sl.disabled = false;
+    } else {
+      sl.disabled = true;
+      if (S.ex < 1) await tween(S.ex, 1, 600, x => { S.ex = x; sl.value = x * 100; cam(); });
+      await tween(S.u, 1, 1700, x => { S.u = x; cam(); });
+    }
+    busy = false; updBtn();
+  });
+  onLang.push(updBtn);
+  cam();
+  return { S, v, cam, placed, pieces };
+})();
+
+/* ================================================================== 3: stretch & slide (Cavalieri) */
+const slide = (() => {
+  const S = { h: 2, tip: 0, c: 0.4 };                 // h = 2 (= a, since the base is 2×2) is exactly the cube piece from step 1
+  const OX1 = -2.15, OX2 = 2.15;
+  function drawOne(V, ox, apex, color, tag, showH) {
+    const base = sqr(ox, 0, 1), top = base.map(p => lerp3(p, apex, S.c));
+    drawShadow(V, [...base, apex], 0, 0.14);
+    drawMesh(V, frustMesh(base, top, { color, faceColors: { 1: YEL }, edgeWidth: 1.5 }), 'all');
+    drawMesh(V, pyrMesh(top, apex, { color, alpha: 0.13, backK: 0.6, edgeColor: shade(color, 0.7), edgeAlpha: 0.8, edgeWidth: 1.2, dash: [4, 4], hidden: 'dashed' }), 'all');
+    if (showH) { const foot = [apex[0], 0, apex[2]]; line3(V, apex, foot, { dash: [3, 4], alpha: 0.6 }); dot3(V, foot, 2.5); label(V, lerp3(apex, foot, 0.72), 'h', { italic: true, size: 19, dx: 13, align: 'left' }); }
+    label(V, avg(top), 'A', { italic: true, size: 18 });
+    label(V, [ox, 0, 1.95], tr(tag), { sans: true, size: 12, color: MUTED });
+  }
+  const v = new View($('#cv-slide'), {
+    yaw: 0.3, pitch: 0.36, dist: 14, target: [0, 1.25, 0], radius: 4.0, fit: 1.45, minPitch: 0.24,
+    draw(V) {
+      drawGround(V, 0, 6.5, 0.5);
+      const a1 = [OX1 + 1, S.h, -1], a2 = [OX2 + S.tip, S.h, -S.tip];
+      const d1 = () => drawOne(V, OX1, a1, BLUE, Math.abs(S.h - 2) < 0.02 ? 'lbl_cube' : 'lbl_stretched', false), d2 = () => drawOne(V, OX2, a2, RED, 'lbl_any', true);
+      if (V.cam[0] > 0) { d1(); d2(); } else { d2(); d1(); }
+      // dashed cut plane trace between them, stopping short of the second cross-section wherever its tip is
+      const x1 = Math.min(OX2 - 1.25, lerp(OX2 - 1, OX2 + S.tip, S.c) - 0.25);
+      if (x1 > OX1 + 1.5) line3(V, [OX1 + 1.25, S.c * S.h, 0], [x1, S.c * S.h, 0], { dash: [2, 5], alpha: 0.45 });
+    }
+  });
+  const sh = $('#sl-h'), st = $('#sl-tip'), sc = $('#sl-cut');
+  function upd() {
+    S.h = +sh.value; S.tip = +st.value; S.c = +sc.value;
+    const ha = S.h / 2, at = Math.abs(S.tip);
+    $('#o-h').innerHTML = `<i>h</i> = ${fmt(ha, 2)} <i>a</i>`;
+    $('#o-tip').textContent = tr(at < 0.04 ? 'tip_center' : Math.abs(at - 1) < 0.04 ? 'tip_corner' : at > 1 ? 'tip_out' : 'tip_off');
+    $('#o-cut').innerHTML = `<i>y</i> = ${fmt(S.c, 2)} <i>h</i>`;
+    $('#ro3').innerHTML = tr('ro3a', { c: fmt(S.c, 2), s: fmt(1 - S.c, 2), A: fmt((1 - S.c) ** 2, 3) }) + '<br>' + tr('ro3b', { h: fmt(ha, 2), v: fmt(ha / 3, 3) });
+    v.request();
+  }
+  [sh, st, sc].forEach(el => el.addEventListener('input', upd));
+  onLang.push(upd);
+  upd();
+  return { S, v, upd };
+})();
+
+/* ================================================================== 4: stairs */
+const stairs = (() => {
+  const s = 1, h = 2.2, base = sqr(0, 0, s), apex = [0, h, 0], NMAX = 48;
+  const S = { n: 6, mode: 'outer' };
+  const fOuter = n => (n + 1) * (2 * n + 1) / (6 * n * n), fInner = n => (n - 1) * (2 * n - 1) / (6 * n * n);
+  const v = new View($('#cv-stairs'), {
+    yaw: 0.62, pitch: 0.4, dist: 10, target: [0, 0.97, 0], radius: 2.3, fit: 1.3,
+    draw(V) {
+      drawGround(V, 0, 3.5, 0.5);
+      drawShadow(V, [...base, apex], 0);
+      const n = S.n, ew = n <= 10 ? 1.2 : n <= 24 ? 0.7 : 0.4;
+      for (let k = 0; k < n; k++) {                         // bottom-up is the correct painter order from above
+        const side = (S.mode === 'outer' ? (n - k) / n : (n - k - 1) / n) * s;
+        if (side < 1e-4) continue;
+        const col = k % 2 ? shade(BLUE, 1.28) : BLUE;
+        drawMesh(V, boxMesh(-side, k * h / n, -side, side, (k + 1) * h / n, side, { color: col, edgeColor: shade(BLUE, 0.45), edgeWidth: ew }), 'all');
+      }
+      drawMesh(V, pyrMesh(base, apex, { color: INK, alpha: 0, edgeColor: INK, edgeAlpha: 0.85, edgeWidth: 1.5, hidden: 'dashed' }), 'all');
+      edgeLabels(V, base, 'a', 1, 0.34);
+      heightDim(V, base, h, 'h');
+    }
+  });
+  const chart = (() => {
+    const cv = $('#cv-chart'), ctx = cv.getContext('2d'); const o = { w: 1, h: 1, dpr: 1 };
+    o.render = () => {
+      const c = ctx; c.setTransform(o.dpr, 0, 0, o.dpr, 0, 0); c.clearRect(0, 0, o.w, o.h);
+      const L = 44, R = 18, T = 14, B = 28, W = o.w - L - R, H = o.h - T - B;
+      const X = n => L + (n - 1) / (NMAX - 1) * W, Y = val => T + (1 - val) * H;
+      c.font = `500 12px ${SANS}`; c.textBaseline = 'middle';
+      for (const g of [0, 0.5, 1]) {
+        c.strokeStyle = rgba(INK, 0.1); c.lineWidth = 1; c.beginPath(); c.moveTo(L, Y(g)); c.lineTo(L + W, Y(g)); c.stroke();
+        c.fillStyle = rgba(MUTED); c.textAlign = 'right'; c.fillText(fmt(g, 1), L - 8, Y(g));
+      }
+      c.strokeStyle = rgba(YEL); c.lineWidth = 2.5; c.setLineDash([7, 5]); c.beginPath(); c.moveTo(L, Y(1 / 3)); c.lineTo(L + W, Y(1 / 3)); c.stroke(); c.setLineDash([]);
+      c.fillStyle = rgba(INK); c.font = `600 16px ${SERIF}`; c.textAlign = 'right'; c.fillText('⅓', L - 8, Y(1 / 3));
+      const plot = (f, col, w, from) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); for (let n = from; n <= NMAX; n++) { const x = X(n), y = Y(f(n)); n === from ? c.moveTo(x, y) : c.lineTo(x, y); } c.stroke(); };
+      const outerOn = S.mode === 'outer';
+      plot(fOuter, rgba(BLUE, outerOn ? 1 : 0.4), outerOn ? 2.4 : 1.4, 1);
+      plot(fInner, rgba(BLUE, outerOn ? 0.4 : 1), outerOn ? 1.4 : 2.4, 1);
+      c.font = `500 12px ${SANS}`; c.fillStyle = rgba(MUTED); c.textAlign = 'left';
+      c.fillText(tr('ch_big'), X(5) + 6, Y(fOuter(5)) - 12);
+      c.fillText(tr('ch_small'), X(5) + 6, Y(fInner(5)) + 14);
+      // x axis ticks
+      c.textAlign = 'center'; c.textBaseline = 'top';
+      for (const n of [1, 8, 16, 24, 32, 40, 48]) c.fillText(String(n), X(n), T + H + 8);
+      c.font = `italic 600 14px ${SERIF}`; c.textAlign = 'right'; c.fillStyle = rgba(INK); c.fillText('n', L - 8, T + H + 7);
+      // current n
+      const n = S.n, x = X(n);
+      c.strokeStyle = rgba(INK, 0.35); c.lineWidth = 1; c.beginPath(); c.moveTo(x, T); c.lineTo(x, T + H); c.stroke();
+      for (const [f, on] of [[fOuter, outerOn], [fInner, !outerOn]]) {
+        c.beginPath(); c.arc(x, Y(f(n)), on ? 5.5 : 3.5, 0, 7); c.fillStyle = rgba(on ? BLUE : MUTED); c.fill();
+        c.lineWidth = 2; c.strokeStyle = rgba(STAGE); c.stroke();
+      }
+    };
+    new ResizeObserver(() => {
+      const r = cv.getBoundingClientRect(); if (r.width < 2) return;
+      o.dpr = Math.min(window.devicePixelRatio || 1, 2); o.w = r.width; o.h = r.height;
+      cv.width = Math.round(o.w * o.dpr); cv.height = Math.round(o.h * o.dpr); o.render();
+    }).observe(cv);
+    return o;
+  })();
+  const sn = $('#sl-n');
+  function upd() {
+    S.n = +sn.value; const n = S.n, outer = S.mode === 'outer';
+    $('#o-n').innerHTML = `<i>n</i> = ${n}`;
+    const top = outer ? n : n - 1;
+    const sum = top * (top + 1) * (2 * top + 1) / 6, f = sum / n ** 3;
+    const terms = top < 1 ? '0' : top <= 6 ? Array.from({ length: top }, (_, i) => (i + 1) + '²').join(' + ') : `1² + 2² + … + ${top}²`;
+    const d = f - 1 / 3;
+    $('#ro4').innerHTML = `${terms} = ${sum}<br>` + tr('ro4_vol', { S: sum, n, f: fmt(f, 4) }) +
+      `<br><span class="dim">${tr(d >= 0 ? 'ro4_above' : 'ro4_below', { d: fmt(Math.abs(d), 4) })}</span>`;
+    document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.mode === S.mode)));
+    v.request(); chart.render();
+  }
+  sn.addEventListener('input', upd);
+  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { S.mode = b.dataset.mode; upd(); }));
+  onLang.push(upd);
+  upd();
+  return { S, v, upd, chart };
+})();
+
+applyLang();
+window.__pyr = { pour, cube, slide, stairs, views, setLang: l => { lang = l; applyLang(); } };
+})();
+</script>
+</body>
+</html>
