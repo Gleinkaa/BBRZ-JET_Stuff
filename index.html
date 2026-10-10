@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BBRZ-JET_Stuff — Tiefziehen &amp; Umformen</title>
+<meta name="description" content="Tiefzieh-Berechnungssuite und interaktive 2D/3D-Umformsimulation (DIN 8584) — Simulation, Excel-Arbeitsmappe, Musterlösungen, Pyramidenvolumen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: oklch(0.145 0 0);
+    --card: oklch(0.205 0 0);
+    --card-hi: oklch(0.24 0 0);
+    --muted: oklch(0.269 0 0);
+    --border: oklch(1 0 0 / 12%);
+    --foreground: oklch(0.985 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --good: oklch(0.72 0.15 155);
+    --warn: oklch(0.78 0.14 80);
+    --crit: oklch(0.65 0.18 25);
+    --info: oklch(0.62 0.16 255);
+    --radius: 10px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--background); color: var(--foreground);
+    font-family: var(--font-sans); font-size: 14px; line-height: 1.5;
+    min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  header {
+    height: 56px; padding: 0 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background-color: var(--card); position: sticky; top: 0; z-index: 50;
+  }
+  .header-title { display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .badge-topic {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+    font-family: var(--font-mono); padding: 3px 8px; border-radius: 6px;
+    background-color: var(--muted); border: 1px solid var(--border); color: var(--muted-foreground);
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border); background-color: var(--card);
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--good); }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 22px; }
+
+  .hero {
+    background: linear-gradient(150deg, oklch(0.24 0 0) 0%, oklch(0.185 0 0) 60%, oklch(0.17 0.02 255) 100%);
+    border: 1px solid var(--border); border-radius: 14px; padding: 34px 32px; position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -120px; top: -120px; width: 380px; height: 380px;
+    background: radial-gradient(circle, oklch(0.62 0.16 255 / 22%), transparent 68%); pointer-events: none;
+  }
+  .hero-kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--info); margin-bottom: 12px; }
+  .hero h2 { font-size: 33px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; max-width: 22ch; }
+  .hero p { color: var(--muted-foreground); margin-top: 12px; max-width: 68ch; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; position: relative; z-index: 1; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; padding: 0 22px; border-radius: 8px; font-size: 14.5px; font-weight: 600;
+    border: 1px solid var(--border); background-color: var(--muted); color: var(--foreground);
+    cursor: pointer; transition: all .15s ease;
+  }
+  .btn:hover { background-color: oklch(0.32 0 0); border-color: oklch(1 0 0 / 20%); }
+  .btn.primary { background-color: var(--primary); color: var(--primary-foreground); border-color: transparent; font-size: 16px; height: 52px; padding: 0 30px; }
+  .btn.primary:hover { background-color: oklch(0.99 0 0); transform: translateY(-1px); }
+  .btn.ghost:hover { border-color: oklch(1 0 0 / 28%); }
+
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .metric-card { background-color: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; display: flex; flex-direction: column; gap: 3px; }
+  .metric-label { font-size: 12px; font-weight: 500; color: var(--muted-foreground); }
+  .metric-value { font-size: 23px; font-weight: 600; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .metric-sub { font-size: 11px; color: var(--muted-foreground); }
+  .metric-sub.good { color: var(--good); }
+  .metric-sub.info { color: var(--info); }
+  .metric-sub.warn { color: var(--warn); }
+
+  .preview { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background-color: var(--card); }
+  .preview img { display: block; width: 100%; height: auto; }
+  .preview-cap { padding: 10px 16px; font-size: 12px; color: var(--muted-foreground); border-top: 1px solid var(--border); font-family: var(--font-mono); }
+
+  h3.section { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted-foreground); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card {
+    background-color: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; display: flex; flex-direction: column; gap: 10px; transition: border-color .15s ease, transform .15s ease;
+  }
+  .card:hover { border-color: oklch(1 0 0 / 22%); transform: translateY(-2px); }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-title { font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .card-text { font-size: 12.8px; color: var(--muted-foreground); flex: 1; }
+  .card-link { font-family: var(--font-mono); font-size: 12px; color: var(--info); }
+  .tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background-color: var(--muted); color: var(--muted-foreground); white-space: nowrap; }
+  .tag.live { color: var(--good); border-color: oklch(0.72 0.15 155 / 45%); background-color: oklch(0.72 0.15 155 / 12%); }
+  .tag.file { color: var(--info); border-color: oklch(0.62 0.16 255 / 45%); background-color: oklch(0.62 0.16 255 / 12%); }
+  .tag.read { color: var(--warn); border-color: oklch(0.78 0.14 80 / 45%); background-color: oklch(0.78 0.14 80 / 12%); }
+
+  footer { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; font-size: 12px; color: var(--muted-foreground); }
+  footer a { color: var(--info); }
+
+  @media (max-width: 880px) {
+    .facts { grid-template-columns: repeat(2, 1fr); }
+    .grid { grid-template-columns: 1fr; }
+    .hero { padding: 26px 20px; }
+    .hero h2 { font-size: 26px; }
+  }
+  @media (max-width: 640px) {
+    header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+    .badge-topic { display: none; }
+    main { padding: 16px 12px 32px; gap: 16px; }
+    .btn.primary { width: 100%; font-size: 15px; }
+    .facts { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <h1>BBRZ-JET_Stuff</h1>
+    <span class="badge-topic">Fertigungstechnik · Umformen · DIN 8584</span>
+  </div>
+  <span class="status-pill"><span class="status-dot"></span> Simulation online</span>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-kicker">Interaktive Umformsimulation · läuft offline im Browser</div>
+    <h2>Tiefziehen: Wanddickenverlauf &amp; Einschnürung</h2>
+    <p>
+      Erstzug eines zylindrischen Napfes — vom ebenen Zuschnitt bis zum fertig durchgezogenen Napf.
+      Halbanalytisches, volumenerhaltendes Membranmodell mit Flanschgleichgewicht nach Siebel,
+      Fließbedingung nach Hill und Bodenreißer-Erkennung. Werkstoff, Blechdicke, Ziehverhältnis und
+      Werkzeugradien sind live einstellbar, die Ziehkraft folgt dem Kraft-Weg-Verlauf.
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="simulation/">▶ Simulation öffnen</a>
+      <a class="btn ghost" href="pyramid-volume.html">Pyramidenvolumen (⅓)</a>
+      <a class="btn ghost" href="excel/Tiefziehen_Berechnungen_Uebungen_6-10.xlsx" download>Excel-Arbeitsmappe</a>
+    </div>
+  </section>
+
+  <section class="facts">
+    <div class="metric-card">
+      <span class="metric-label">Max. Ziehkraft (DC01, β=2)</span>
+      <span class="metric-value">≈ 54 kN</span>
+      <span class="metric-sub good">Siebel-Handrechnung ≈ 59 kN</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Volumenerhalt am Hub-Ende</span>
+      <span class="metric-value">1,000</span>
+      <span class="metric-sub good">exakt 1</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Ausdünnung Stempelkante</span>
+      <span class="metric-value">−7 %</span>
+      <span class="metric-sub warn">typisch −5 … −20 %</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Napfhöhe (d = 50 mm)</span>
+      <span class="metric-value">≈ 37 mm</span>
+      <span class="metric-sub info">analytisch 37,5 mm</span>
+    </div>
+  </section>
+
+  <section class="preview">
+    <img src="simulation/preview.png" alt="Tiefzieh-Simulation am Ende des Hubs: 2D-Werkzeugschnitt, 3D-Wandstärken-Heatmap und Wanddickenverlauf">
+    <div class="preview-cap">Ende des Hubs · 2D-Werkzeugschnitt · 3D-Wandstärken-Heatmap · Wanddickenverlauf s(l)</div>
+  </section>
+
+  <h3 class="section">Inhalt</h3>
+  <section class="grid">
+
+    <a class="card" href="simulation/">
+      <div class="card-top"><span class="card-title">Tiefzieh-Simulation</span><span class="tag live">online</span></div>
+      <span class="card-text">
+        2D-Werkzeugschnitt mit Blechverformung, 3D-Schnittmodell mit Dicken-Farbkodierung (Three.js) und
+        Diagramm der Wanddickenverteilung über der Konturlänge. 5 Werkstoffe, Ziehhub-Animation,
+        Einschnürungs- und Rissgefahr-Anzeige.
+      </span>
+      <span class="card-link">simulation/ →</span>
+    </a>
+
+    <a class="card" href="pyramid-volume.html">
+      <div class="card-top"><span class="card-title">Pyramidenvolumen — warum ⅓?</span><span class="tag live">online</span></div>
+      <span class="card-text">
+        Eigenständige interaktive Seite zu V = ⅓ · a² · h: Wasser-Experiment, Zerlegung des Würfels in drei
+        Pyramiden, Cavalieri-Beweis, Nachrechnen mit Treppenpyramide. Drehbare 3D-Figuren, EN/DE.
+      </span>
+      <span class="card-link">pyramid-volume.html →</span>
+    </a>
+
+    <a class="card" href="excel/Tiefziehen_Berechnungen_Uebungen_6-10.xlsx" download>
+      <div class="card-top"><span class="card-title">Excel-Arbeitsmappe</span><span class="tag file">.xlsx</span></div>
+      <span class="card-text">
+        Editierbare Formelblätter (Eingaben gelb, Ergebnisse grün) zu den Tiefziehaufgaben 6–10 —
+        inklusive Generator-Skript <span style="font-family:var(--font-mono)">excel/generate_excel.py</span>.
+      </span>
+      <span class="card-link">excel/…xlsx ↓</span>
+    </a>
+
+    <a class="card" href="docs/rechenbuch_metall_uebungen_6-10.md">
+      <div class="card-top"><span class="card-title">Musterlösungen mit Rechenweg</span><span class="tag read">Markdown</span></div>
+      <span class="card-text">
+        Eigene Lösungswege und Zusammenfassungen zu den Aufgaben 6–10 aus dem <em>Rechenbuch Metall</em>
+        (Europa-Lehrmittel, S. 248). Nur eigene Aufbereitung, kein Buchtext.
+      </span>
+      <span class="card-link">docs/…uebungen_6-10.md →</span>
+    </a>
+
+  </section>
+
+  <footer>
+    <span>Erstellt für Bildungs- und Ausbildungszwecke im Rahmen des BBRZ-/JET-Programms.</span>
+    <span>
+      <a href="https://github.com/Gleinkaa/BBRZ-JET_Stuff">GitHub</a> ·
+      <a href="https://github.com/Gleinkaa/BBRZ-JET_Stuff#readme">README</a> ·
+      MIT · Three.js (MIT)
+    </span>
+  </footer>
+
+</main>
+
+</body>
+</html>
