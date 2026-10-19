@@ -28,6 +28,7 @@ BBRZ-JET_Stuff/
 └── docs/
     └── rechenbuch_metall_uebungen_6-10.md  # Musterlösungen mit Rechenweg
 pyramid-volume.html        # Geometrie: Warum ist eine Pyramide genau ⅓? (eigenständige Seite, EN/DE)
+interaktive_weg_zeit_diagramm_physik_simulation.html # Kinematik: Interaktives Weg-Zeit-Diagramm Labor (s-t, v-t, a-t)
 ```
 
 ---
@@ -122,6 +123,15 @@ Eigenständige, interaktive Seite zur Formel $V = \tfrac{1}{3}\,a^2\,h$ der quad
 3. **Beweis, Schritt 2** – Strecken (Höhe) und Verschieben der Spitze (Cavalieri): gleiche Schnittflächen, gleiches Volumen – damit gilt ⅓ für jede quadratische Pyramide.
 4. **Nachrechnen** – Treppenpyramide aus n Platten (außen/innen), exakte Summe (1² + … + n²)/n³ und Diagramm, das von beiden Seiten gegen ⅓ läuft.
 5. **Zusammenfassung** mit Integralrechnung und dem Hinweis, dass ⅓ · G · h für jede Grundfläche gilt (auch Kegel).
+
+---
+
+## 5. Interaktives Weg-Zeit-Diagramm Labor (`interaktive_weg_zeit_diagramm_physik_simulation.html`)
+
+Eigenständiges, interaktives Physik-Labor zur Veranschaulichung der Kinematik (s-t-, v-t- und a-t-Diagramme):
+* **Mehrstufige Bewegungen:** Einzelne Phasen (Stillstand, gleichförmige Bewegung $v = \text{const.}$, gleichmäßig beschleunigte Bewegung $a = \text{const.}$) konfigurieren und nahtlos aneinanderhängen.
+* **Kurvendiskussion & Zusammenhänge:** Steigungsdreiecke ($v = ds/dt$, $a = dv/dt$) und Flächenintegrale ($s = \int v\,dt$) interaktiv nachvollziehen.
+* **Live-Animation:** Synchronisierte Fahrzeug-Fahrspur zur Veranschaulichung von Momentangeschwindigkeit und Beschleunigung.
 
 ---
 

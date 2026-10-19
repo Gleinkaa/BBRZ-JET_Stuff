@@ -13,6 +13,7 @@ Pyramidenvolumen. Alles läuft ohne Build-Schritt im Browser bzw. in Excel/Libre
 ```
 index.html                     Landing Page (Hero, Kennzahlen, Links)
 pyramid-volume.html            Warum ist eine Pyramide genau 1/3? (eigenständige Seite, EN/DE, offline)
+interaktive_weg_zeit_diagramm_physik_simulation.html  Physik-Labor: Weg-Zeit-Diagramm (Kinematik, s-t/v-t/a-t)
 simulation/index.html          Oberfläche: Steuerpanel, Kennwerte, Ansichten
 simulation/simulation.js       Physikmodell (Materialpunkte, Hill, Siebel, Bodenreißer)
 simulation/view2d.js           2D-Werkzeugschnitt mit Blechverformung

@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physik-Labor: Interaktive Weg-Zeit-Diagramm Simulation (Kinematik)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        sColor: '#3b82f6', // Blau für Weg s(t)
+                        vColor: '#10b981', // Smaragdgrün für Geschwindigkeit v(t)
+                        aColor: '#f43f5e', // Rot/Rose für Beschleunigung a(t)
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        /* Custom Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #334155;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #f8fafc;
+            border: 3px solid #3b82f6;
+            margin-top: -6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+        input[type="range"]:hover::-webkit-slider-thumb {
+            transform: scale(1.12);
+        }
+        input[type="range"]:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .slider-s::-webkit-slider-thumb { border-color: #3b82f6 !important; }
+        .slider-v::-webkit-slider-thumb { border-color: #10b981 !important; }
+        .slider-a::-webkit-slider-thumb { border-color: #f43f5e !important; }
+        .slider-t::-webkit-slider-thumb { border-color: #f59e0b !important; }
+
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 0.85em;
+            line-height: 1.1;
+            margin: 0 2px;
+        }
+        .math-frac > span:first-child {
+            border-bottom: 1px solid currentColor;
+            padding: 0 3px;
+        }
+        .math-frac > span:last-child {
+            padding: 0 3px;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">Kinematik-Labor: Weg-Zeit-Diagramm</h1>
+                        <span id="motionModeBadge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Gleichmäßig beschleunigte Bewegung
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400">Interaktive Simulation für $s(t)$-, $v(t)$- und $a(t)$-Diagramme mit Vektoren & Live-Formeln</p>
+                </div>
+            </div>
+
+            <!-- Preset Scenarios -->
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-xs font-medium text-slate-400 mr-1 hidden xl:inline">Szenarien:</span>
+                <button onclick="applyPreset('uniform')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    Gleichförmig ($a=0$)
+                </button>
+                <button onclick="applyPreset('accel_rest')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    Anfahren ($v_0=0$)
+                </button>
+                <button onclick="applyPreset('braking')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    Bremsvorgang ($a<0$)
+                </button>
+                <button onclick="applyPreset('turnaround')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    Umkehrbewegung
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-6">
+
+        <!-- SECTION 1: Visuelle Animationsspur (Messstrecke) -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-100 uppercase tracking-wider">1. Visuelle Animationsspur & Vektordarstellung</h2>
+                </div>
+
+                <!-- Vector & Track Options -->
+                <div class="flex flex-wrap items-center gap-3 text-xs">
+                    <label class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 cursor-pointer select-none">
+                        <input type="checkbox" id="showVecV" checked class="rounded text-emerald-500 focus:ring-0">
+                        <span>Geschwindigkeitsvektor $\vec{v}$</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 cursor-pointer select-none">
+                        <input type="checkbox" id="showVecA" checked class="rounded text-rose-500 focus:ring-0">
+                        <span>Beschleunigungsvektor $\vec{a}$</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 cursor-pointer select-none">
+                        <input type="checkbox" id="showStrobe" checked class="rounded text-blue-500 focus:ring-0">
+                        <span>Stroboskop-Marken (1s)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Track Canvas Wrapper -->
+            <div class="relative w-full h-44 sm:h-48 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                <canvas id="trackCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <!-- Live Telemetry Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-3">
+                <div class="bg-slate-950/90 border border-amber-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-amber-400/80 block font-semibold">Zeit $t$</span>
+                        <span id="valTime" class="text-base sm:text-lg font-mono font-bold text-amber-400">0.00 s</span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500">[0..10s]</span>
+                </div>
+                <div class="bg-slate-950/90 border border-blue-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-blue-400/80 block font-semibold">Position $s(t)$</span>
+                        <span id="valPos" class="text-base sm:text-lg font-mono font-bold text-blue-400">0.00 m</span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500" id="valDeltaS">$\Delta s$: 0.0 m</span>
+                </div>
+                <div class="bg-slate-950/90 border border-emerald-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-emerald-400/80 block font-semibold">Geschwindigkeit $v(t)$</span>
+                        <span id="valVel" class="text-base sm:text-lg font-mono font-bold text-emerald-400">5.00 m/s</span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500" id="valVelKmh">18.0 km/h</span>
+                </div>
+                <div class="bg-slate-950/90 border border-rose-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-rose-400/80 block font-semibold">Beschleunigung $a(t)$</span>
+                        <span id="valAcc" class="text-base sm:text-lg font-mono font-bold text-rose-400">2.00 m/s²</span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500" id="valAccState">konstant</span>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-slate-950/90 border border-purple-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-purple-400/80 block font-semibold">Ø-Geschw. $\bar{v}_{[0,t]}$</span>
+                        <span id="valAvgVel" class="text-base sm:text-lg font-mono font-bold text-purple-300">5.00 m/s</span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500">$\Delta s / \Delta t$</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Steuerung, Parameter & Interaktive Diagramme -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: Steuerung & Parameter (4 cols on lg) -->
+            <div class="lg:col-span-4 space-y-5">
+
+                <!-- Zeitsteuerung Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Ablauf & Zeitsteuerung
+                        </h3>
+                        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+                            <button onclick="setSimSpeed(0.5)" id="speed05" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition">0.5x</button>
+                            <button onclick="setSimSpeed(1)" id="speed1" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold transition">1x</button>
+                            <button onclick="setSimSpeed(2)" id="speed2" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition">2x</button>
+                        </div>
+                    </div>
+
+                    <!-- Play / Pause / Reset / Step Buttons -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <button id="btnPlayPause" class="col-span-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/25 transition">
+                            <svg id="iconPlay" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <svg id="iconPause" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span id="textPlayPause">Start</span>
+                        </button>
+                        <button id="btnStepBack" title="-0.2s Schritt" class="flex items-center justify-center py-2.5 px-3 rounded-xl font-mono text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                            -0.2s
+                        </button>
+                        <button id="btnReset" class="flex items-center justify-center gap-1 py-2.5 px-3 rounded-xl font-semibold text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Time Slider t -->
+                    <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label for="sliderT" class="text-xs font-semibold text-amber-300">Zeitpunkt $t$ wählen (Zeitschieberegler)</label>
+                            <span id="labelT" class="text-sm font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">0.00 s</span>
+                        </div>
+                        <input type="range" id="sliderT" min="0" max="10" step="0.01" value="0" class="w-full slider-t">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>0 s</span>
+                            <span>2.5 s</span>
+                            <span>5.0 s</span>
+                            <span>7.5 s</span>
+                            <span>10.0 s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physikalische Parameter Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                        </svg>
+                        2. Bewegungsparameter (An-/Abwählbar)
+                    </h3>
+
+                    <!-- Parameter 1: Startposition s0 -->
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-blue-500/25 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                <label for="sliderS0" class="text-xs font-semibold text-slate-200">Anfangsposition $s_0$</label>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="labelS0" class="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">0.0 m</span>
+                                <button onclick="resetParam('s0')" title="Auf 0 setzen" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400">0</button>
+                            </div>
+                        </div>
+                        <input type="range" id="sliderS0" min="-50" max="50" step="1" value="0" class="w-full slider-s">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>-50 m</span>
+                            <span>0 m</span>
+                            <span>+50 m</span>
+                        </div>
+                    </div>
+
+                    <!-- Parameter 2: Anfangsgeschwindigkeit v0 (An-/Abwählbar) -->
+                    <div id="cardV0" class="bg-slate-950/80 p-3.5 rounded-xl border border-emerald-500/30 space-y-2 transition">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" id="checkV0" checked class="w-4 h-4 rounded text-emerald-500 focus:ring-0 bg-slate-800 border-slate-600">
+                                <span class="text-xs font-semibold text-slate-200">Anfangsgeschwindigkeit $v_0$</span>
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <span id="labelV0" class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">6.0 m/s</span>
+                                <button onclick="resetParam('v0')" title="Auf 0 setzen" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400">0</button>
+                            </div>
+                        </div>
+                        <input type="range" id="sliderV0" min="-20" max="20" step="0.5" value="6" class="w-full slider-v">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>-20 m/s (rückwärts)</span>
+                            <span>0</span>
+                            <span>+20 m/s</span>
+                        </div>
+                        <p id="hintV0" class="text-[11px] text-slate-400">Aktiv: Körper startet bereits mit Anfangsgeschwindigkeit $v_0$.</p>
+                    </div>
+
+                    <!-- Parameter 3: Beschleunigung a (An-/Abwählbar) -->
+                    <div id="cardA" class="bg-slate-950/80 p-3.5 rounded-xl border border-rose-500/30 space-y-2 transition">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" id="checkA" checked class="w-4 h-4 rounded text-rose-500 focus:ring-0 bg-slate-800 border-slate-600">
+                                <span class="text-xs font-semibold text-slate-200">Beschleunigung $a$ aktivieren</span>
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <span id="labelA" class="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">2.0 m/s²</span>
+                                <button onclick="resetParam('a')" title="Auf 0 setzen" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400">0</button>
+                            </div>
+                        </div>
+                        <input type="range" id="sliderA" min="-8" max="8" step="0.2" value="2.0" class="w-full slider-a">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>-8 m/s² (Bremsen)</span>
+                            <span>0</span>
+                            <span>+8 m/s²</span>
+                        </div>
+                        <p id="hintA" class="text-[11px] text-slate-400">Aktiv: Gleichmäßig beschleunigte Bewegung ($s$-$t$-Kurve ist eine Parabel).</p>
+                    </div>
+
+                    <!-- Diagramm-Kurven & Analyse-Hilfen Ein-/Ausblenden -->
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300 block">Diagramme & Analyse-Hilfen einblenden</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 text-xs">
+                            <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-blue-500/30 cursor-pointer">
+                                <span class="flex items-center gap-2 text-blue-300 font-medium">
+                                    <input type="checkbox" id="toggleGraphS" checked class="rounded text-blue-500 focus:ring-0">
+                                    Weg-Zeit-Diagramm $s(t)$
+                                </span>
+                                <span class="w-3 h-1 rounded bg-blue-500"></span>
+                            </label>
+                            <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-emerald-500/30 cursor-pointer">
+                                <span class="flex items-center gap-2 text-emerald-300 font-medium">
+                                    <input type="checkbox" id="toggleGraphV" checked class="rounded text-emerald-500 focus:ring-0">
+                                    Geschwindigkeits-Diagramm $v(t)$
+                                </span>
+                                <span class="w-3 h-1 rounded bg-emerald-500"></span>
+                            </label>
+                            <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-rose-500/30 cursor-pointer">
+                                <span class="flex items-center gap-2 text-rose-300 font-medium">
+                                    <input type="checkbox" id="toggleGraphA" checked class="rounded text-rose-500 focus:ring-0">
+                                    Beschleunigungs-Diagramm $a(t)$
+                                </span>
+                                <span class="w-3 h-1 rounded bg-rose-500"></span>
+                            </label>
+                            <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-amber-500/30 cursor-pointer">
+                                <span class="flex items-center gap-2 text-amber-300 font-medium">
+                                    <input type="checkbox" id="toggleTangent" checked class="rounded text-amber-500 focus:ring-0">
+                                    Steigungsdreieck / Tangente ($\frac{\Delta s}{\Delta t}$)
+                                </span>
+                                <span class="text-[10px] font-mono text-amber-400">v = ds/dt</span>
+                            </label>
+                            <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-purple-500/30 cursor-pointer">
+                                <span class="flex items-center gap-2 text-purple-300 font-medium">
+                                    <input type="checkbox" id="toggleIntegral" checked class="rounded text-purple-500 focus:ring-0">
+                                    Flächeninhalt in $v(t)$ & $a(t)$
+                                </span>
+                                <span class="text-[10px] font-mono text-purple-400">∫v dt = Δs</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Interaktive Diagramme (8 cols on lg) -->
+            <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            3. Interaktive Echtzeit-Diagramme (Synchronisierte Zeitachse)
+                        </h2>
+                        <p class="text-xs text-slate-400">Klicke oder ziehe direkt in einem Diagramm, um den Zeitpunkt $t$ interaktiv zu verschieben.</p>
+                    </div>
+
+                    <!-- View Mode Switcher: Einzeldiagramme vs Kombiniert -->
+                    <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                        <button id="btnViewSplit" onclick="setGraphLayout('split')" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold transition">
+                            Synchronisierte Einzeldiagramme
+                        </button>
+                        <button id="btnViewCombined" onclick="setGraphLayout('combined')" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-medium transition">
+                            Kombinierte Ansicht
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SPLIT VIEW CONTAINER -->
+                <div id="splitGraphsContainer" class="flex-1 flex flex-col gap-3">
+                    <!-- s(t) Diagramm -->
+                    <div id="wrapGraphS" class="flex-1 min-h-[210px] bg-slate-950 rounded-xl border border-slate-800/90 p-2 relative flex flex-col">
+                        <div class="flex items-center justify-between px-2 pb-1">
+                            <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span>
+                                Weg-Zeit-Diagramm $s(t)$ in $\text{m}$
+                            </span>
+                            <span id="graphFormulaBadgeS" class="text-xs font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                s(t) = 0.5 · a · t² + v₀ · t + s₀
+                            </span>
+                        </div>
+                        <div class="relative flex-1 w-full">
+                            <canvas id="canvasS" class="w-full h-full block cursor-ew-resize"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- v(t) Diagramm -->
+                    <div id="wrapGraphV" class="flex-1 min-h-[175px] bg-slate-950 rounded-xl border border-slate-800/90 p-2 relative flex flex-col">
+                        <div class="flex items-center justify-between px-2 pb-1">
+                            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span>
+                                Geschwindigkeits-Zeit-Diagramm $v(t)$ in $\text{m/s}$
+                            </span>
+                            <span id="graphFormulaBadgeV" class="text-xs font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                v(t) = a · t + v₀
+                            </span>
+                        </div>
+                        <div class="relative flex-1 w-full">
+                            <canvas id="canvasV" class="w-full h-full block cursor-ew-resize"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- a(t) Diagramm -->
+                    <div id="wrapGraphA" class="flex-1 min-h-[145px] bg-slate-950 rounded-xl border border-slate-800/90 p-2 relative flex flex-col">
+                        <div class="flex items-center justify-between px-2 pb-1">
+                            <span class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block"></span>
+                                Beschleunigungs-Zeit-Diagramm $a(t)$ in $\text{m/s}^2$
+                            </span>
+                            <span id="graphFormulaBadgeA" class="text-xs font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                a(t) = a = konst.
+                            </span>
+                        </div>
+                        <div class="relative flex-1 w-full">
+                            <canvas id="canvasA" class="w-full h-full block cursor-ew-resize"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMBINED VIEW CONTAINER (Hidden by default) -->
+                <div id="combinedGraphContainer" class="hidden flex-1 min-h-[530px] bg-slate-950 rounded-xl border border-slate-800 p-3 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-2 pb-2">
+                        <span class="text-xs font-bold text-slate-200">Kombinierte Darstellung: $s(t)$, $v(t)$ und $a(t)$ über gemeinsamer Zeitachse $t$</span>
+                        <div class="flex items-center gap-4 text-xs font-mono">
+                            <span class="flex items-center gap-1.5 text-blue-400"><span class="w-3 h-1 bg-blue-500 inline-block"></span> $s(t)$ [m]</span>
+                            <span class="flex items-center gap-1.5 text-emerald-400"><span class="w-3 h-1 bg-emerald-500 inline-block"></span> $v(t)$ [m/s]</span>
+                            <span class="flex items-center gap-1.5 text-rose-400"><span class="w-3 h-1 bg-rose-500 inline-block"></span> $a(t)$ [m/s²]</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 w-full">
+                        <canvas id="canvasCombined" class="w-full h-full block cursor-ew-resize"></canvas>
+                    </div>
+                </div>
+
+                <!-- Legend / Pedagogical Summary Bar -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-semibold">Ableitung (Steigung)</span>
+                        <span>Steigung von $s(t)$ $\rightarrow$ $v(t) = \dot{s}(t)$ | Steigung von $v(t)$ $\rightarrow$ $a(t) = \dot{v}(t)$</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-semibold">Integral (Fläche)</span>
+                        <span>Fläche unter $v(t)$ $\rightarrow$ $\Delta s$ | Fläche unter $a(t)$ $\rightarrow$ $\Delta v$</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Formelsammlung & Live-Berechnung -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <h2 class="text-base sm:text-lg font-bold text-white uppercase tracking-wider">4. Dynamische Formelsammlung & Live-Berechnung</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Alle gültigen Gesetze der Kinematik angepasst an den aktuell gewählten Bewegungsmodus mit eingesetzten Zahlenwerten zum Zeitpunkt <span id="formulaTimeHeader" class="font-mono text-amber-400 font-bold">t = 0.00 s</span>.
+                    </p>
+                </div>
+
+                <!-- Active Mode Comparison Pill -->
+                <div id="formulaModeBanner" class="px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center gap-3">
+                    <span class="text-slate-400">Aktiver Modus:</span>
+                    <strong id="formulaModeName" class="text-emerald-400 font-semibold">Gleichmäßig beschleunigte Bewegung ($a \neq 0$)</strong>
+                </div>
+            </div>
+
+            <!-- Grid of 5 Formula Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+                <!-- 1. Weg-Zeit-Gesetz -->
+                <div class="bg-slate-950 border border-blue-500/30 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-400">1. Weg-Zeit-Gesetz $s(t)$</span>
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">Einheit: Meter [m]</span>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Allgemein ($a \neq 0$):</span>
+                                <span class="font-mono text-slate-200">$s(t) = \frac{1}{2} \cdot a \cdot t^2 + v_0 \cdot t + s_0$</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Spezialfall ($a = 0$):</span>
+                                <span class="font-mono text-slate-200">$s(t) = v_0 \cdot t + s_0$</span>
+                            </div>
+                            <div class="pt-1.5 border-t border-slate-800 flex justify-between items-center">
+                                <span class="text-[11px] font-semibold text-blue-400">Aktive Formel:</span>
+                                <span id="activeFormulaS" class="font-mono text-xs font-bold text-white bg-blue-500/20 px-2 py-0.5 rounded">s(t) = ½·a·t² + v₀·t + s₀</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800/80 space-y-1">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Einsetzen der aktuellen Werte:</span>
+                        <div id="calcStepS" class="font-mono text-xs text-slate-300 break-all">
+                            s(0.00) = 0.5 · 2.0 · 0.00² + 6.0 · 0.00 + 0.0
+                        </div>
+                        <div id="calcResS" class="font-mono text-sm font-bold text-blue-400 pt-1">
+                            s(0.00 s) = 0.00 m
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Geschwindigkeits-Zeit-Gesetz -->
+                <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">2. Geschwindigkeits-Zeit-Gesetz $v(t)$</span>
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Einheit: [m/s]</span>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Allgemein ($a \neq 0$):</span>
+                                <span class="font-mono text-slate-200">$v(t) = a \cdot t + v_0$</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Gleichförmig ($a = 0$):</span>
+                                <span class="font-mono text-slate-200">$v(t) = v_0 = \text{konst.}$</span>
+                            </div>
+                            <div class="pt-1.5 border-t border-slate-800 flex justify-between items-center">
+                                <span class="text-[11px] font-semibold text-emerald-400">Aktive Formel:</span>
+                                <span id="activeFormulaV" class="font-mono text-xs font-bold text-white bg-emerald-500/20 px-2 py-0.5 rounded">v(t) = a · t + v₀</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800/80 space-y-1">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Einsetzen der aktuellen Werte:</span>
+                        <div id="calcStepV" class="font-mono text-xs text-slate-300">
+                            v(0.00) = 2.0 · 0.00 + 6.0
+                        </div>
+                        <div id="calcResV" class="font-mono text-sm font-bold text-emerald-400 pt-1">
+                            v(0.00 s) = 6.00 m/s (21.6 km/h)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Beschleunigungs-Zeit-Gesetz -->
+                <div class="bg-slate-950 border border-rose-500/30 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-rose-400">3. Beschleunigungs-Gesetz $a(t)$</span>
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">Einheit: [m/s²]</span>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Definition (Änderungsrate):</span>
+                                <span class="font-mono text-slate-200">$a(t) = \frac{\Delta v}{\Delta t} = \frac{v(t) - v_0}{t}$</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Gleichförmig ($a = 0$):</span>
+                                <span class="font-mono text-slate-200">$a(t) = 0\text{ m/s}^2$</span>
+                            </div>
+                            <div class="pt-1.5 border-t border-slate-800 flex justify-between items-center">
+                                <span class="text-[11px] font-semibold text-rose-400">Aktive Formel:</span>
+                                <span id="activeFormulaA" class="font-mono text-xs font-bold text-white bg-rose-500/20 px-2 py-0.5 rounded">a(t) = a = konst.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800/80 space-y-1">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Geschwindigkeitsänderung $\Delta v = a \cdot t$:</span>
+                        <div id="calcStepA" class="font-mono text-xs text-slate-300">
+                            Δv = 2.0 m/s² · 0.00 s = 0.00 m/s
+                        </div>
+                        <div id="calcResA" class="font-mono text-sm font-bold text-rose-400 pt-1">
+                            a(0.00 s) = 2.00 m/s² (konstant)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Zeitunabhängige Formel (Torricelli-Gleichung) -->
+                <div class="bg-slate-950 border border-indigo-500/30 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">4. Zeitunabhängige Formel (Torricelli)</span>
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Ohne Zeit $t$</span>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Quadratische Beziehung:</span>
+                                <span class="font-mono text-slate-200">$v^2 - v_0^2 = 2 \cdot a \cdot \Delta s$</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 flex justify-between">
+                                <span>Mit zurückgelegtem Weg:</span>
+                                <span class="font-mono text-slate-200">$\Delta s = s(t) - s_0$</span>
+                            </div>
+                            <div class="pt-1.5 border-t border-slate-800 flex justify-between items-center">
+                                <span class="text-[11px] font-semibold text-indigo-400">Nach $\Delta s$ / $v^2$:</span>
+                                <span id="activeFormulaTorricelli" class="font-mono text-xs font-bold text-white bg-indigo-500/20 px-2 py-0.5 rounded">v² - v₀² = 2 · a · (s - s₀)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800/80 space-y-1">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Nachweis durch Einsetzen zum Zeitpunkt $t$:</span>
+                        <div id="calcStepTorricelli" class="font-mono text-xs text-slate-300">
+                            Links: v² - v₀² = 6.00² - 6.00² = 0.00 m²/s²
+                        </div>
+                        <div id="calcResTorricelli" class="font-mono text-sm font-bold text-indigo-400 pt-1">
+                            Rechts: 2 · a · Δs = 2 · 2.0 · 0.00 = 0.00 m²/s²
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Durchschnitts- & Momentangeschwindigkeit (Differential-Zusammenhang) -->
+                <div class="md:col-span-2 bg-slate-950 border border-amber-500/30 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-400">
+                            5. Durchschnittsgeschwindigkeit $\bar{v}$ & Momentangeschwindigkeit $v(t)$ (Tangentensteigung)
+                        </span>
+                        <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                            Geometrische Deutung im $s$-$t$-Diagramm
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Durchschnittsgeschwindigkeit (Sekante) -->
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-300 flex items-center justify-between">
+                                <span>Durchschnittsgeschwindigkeit $\bar{v}$ (Sekante $[0, t]$)</span>
+                                <span class="font-mono text-[11px] bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-200">Sekantensteigung</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">
+                                Quotient aus zurückgelegter Strecke $\Delta s = s(t) - s_0$ und benötigter Zeitspanne $\Delta t = t - 0$:
+                            </p>
+                            <div class="font-mono text-xs text-slate-200 bg-slate-950 p-2 rounded border border-slate-800">
+                                $\bar{v} = \frac{\Delta s}{\Delta t} = \frac{s(t) - s_0}{t} = \frac{v_0 + v(t)}{2}$
+                            </div>
+                            <div id="calcAvgVelDetail" class="font-mono text-xs font-bold text-purple-300 pt-1">
+                                v̄ = (0.00 m - 0.00 m) / 0.00 s = 6.00 m/s
+                            </div>
+                        </div>
+
+                        <!-- Momentangeschwindigkeit (Tangente) -->
+                        <div class="bg-slate-900/90 rounded-lg p-3 border border-slate-800 space-y-1.5">
+                            <div class="text-xs font-semibold text-amber-300 flex items-center justify-between">
+                                <span>Momentangeschwindigkeit $v(t)$ (Tangente in $t$)</span>
+                                <span class="font-mono text-[11px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-200">Tangentensteigung</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">
+                                Erste Ableitung nach der Zeit (Steigung $m$ der Tangente an die $s(t)$-Kurve im Punkt $t$):
+                            </p>
+                            <div class="font-mono text-xs text-slate-200 bg-slate-950 p-2 rounded border border-slate-800">
+                                $v(t) = \lim_{\Delta t \to 0} \frac{\Delta s}{\Delta t} = \frac{\text{d}s}{\text{d}t} = \dot{s}(t) = a \cdot t + v_0$
+                            </div>
+                            <div id="calcInstVelDetail" class="font-mono text-xs font-bold text-amber-300 pt-1">
+                                Steigung m = ds/dt = 2.0 · 0.00 + 6.0 = 6.00 m/s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-3 px-4 text-center text-xs text-slate-500">
+        Interaktive Physik-Simulation • Kinematik: Gleichförmige Bewegung ($a = 0$) & Gleichmäßig beschleunigte Bewegung ($a = \text{konst.}$)
+    </footer>
+
+    <!-- Complete Simulation Logic -->
+    <script>
+        // ============================================================================
+        // 1. ZUSTANDSVARIABLEN DER SIMULATION (State)
+        // ============================================================================
+        const state = {
+            t: 0.0,             // Aktuelle Zeit in s [0 .. 10]
+            tMax: 10.0,         // Maximale Simulationsdauer in s
+            s0: 0.0,            // Anfangsposition in m [-50 .. 50]
+            v0Enabled: true,    // Ist Anfangsgeschwindigkeit v0 aktiv?
+            v0Slider: 6.0,      // Slider-Wert für v0 in m/s [-20 .. 20]
+            aEnabled: true,     // Ist Beschleunigung a aktiv?
+            aSlider: 2.0,       // Slider-Wert für a in m/s² [-8 .. 8]
+
+            isPlaying: false,   // Läuft die Animation?
+            simSpeed: 1.0,      // Wiedergabegeschwindigkeit (0.5x, 1x, 2x)
+            lastFrameTime: 0,
+
+            // Darstellungsoptionen
+            showVecV: true,
+            showVecA: true,
+            showStrobe: true,
+            showGraphS: true,
+            showGraphV: true,
+            showGraphA: true,
+            showTangent: true,
+            showIntegral: true,
+            graphLayout: 'split' // 'split' oder 'combined'
+        };
+
+        // Hilfsfunktionen für die aktuell wirksamen physikalischen Größen
+        function getEffectiveV0() {
+            return state.v0Enabled ? state.v0Slider : 0.0;
+        }
+
+        function getEffectiveA() {
+            return state.aEnabled ? state.aSlider : 0.0;
+        }
+
+        // Physikalische Grundfunktionen zu beliebigem Zeitpunkt time
+        function calcS(time) {
+            const v0 = getEffectiveV0();
+            const a = getEffectiveA();
+            return 0.5 * a * time * time + v0 * time + state.s0;
+        }
+
+        function calcV(time) {
+            const v0 = getEffectiveV0();
+            const a = getEffectiveA();
+            return a * time + v0;
+        }
+
+        function calcA(time) {
+            return getEffectiveA();
+        }
+
+        // ============================================================================
+        // 2. DOM-ELEMENTE & EVENT-LISTENER INITIALISIEREN
+        // ============================================================================
+        const els = {
+            trackCanvas: document.getElementById('trackCanvas'),
+            canvasS: document.getElementById('canvasS'),
+            canvasV: document.getElementById('canvasV'),
+            canvasA: document.getElementById('canvasA'),
+            canvasCombined: document.getElementById('canvasCombined'),
+
+            sliderT: document.getElementById('sliderT'),
+            sliderS0: document.getElementById('sliderS0'),
+            sliderV0: document.getElementById('sliderV0'),
+            sliderA: document.getElementById('sliderA'),
+
+            checkV0: document.getElementById('checkV0'),
+            checkA: document.getElementById('checkA'),
+
+            showVecV: document.getElementById('showVecV'),
+            showVecA: document.getElementById('showVecA'),
+            showStrobe: document.getElementById('showStrobe'),
+
+            toggleGraphS: document.getElementById('toggleGraphS'),
+            toggleGraphV: document.getElementById('toggleGraphV'),
+            toggleGraphA: document.getElementById('toggleGraphA'),
+            toggleTangent: document.getElementById('toggleTangent'),
+            toggleIntegral: document.getElementById('toggleIntegral'),
+
+            btnPlayPause: document.getElementById('btnPlayPause'),
+            btnReset: document.getElementById('btnReset'),
+            btnStepBack: document.getElementById('btnStepBack'),
+            iconPlay: document.getElementById('iconPlay'),
+            iconPause: document.getElementById('iconPause'),
+            textPlayPause: document.getElementById('textPlayPause')
+        };
+
+        // LaTeX-ähnliche Inline-Notation sauber in HTML umwandeln (für statische Labels)
+        function formatMathInDOM() {
+            document.querySelectorAll('span, p, label, h1, h2, h3, div').forEach(el => {
+                if (el.children.length === 0 && el.textContent.includes('$')) {
+                    el.innerHTML = el.textContent.replace(/\$([^$]+)\$/g, (_, math) => {
+                        return math
+                            .replace(/\\vec\{v\}/g, '<span class="italic font-serif">v&#8407;</span>')
+                            .replace(/\\vec\{a\}/g, '<span class="italic font-serif">a&#8407;</span>')
+                            .replace(/\\bar\{v\}_\{\[0,t\]\}/g, '<span class="italic font-serif">v&#772;</span><sub>[0,t]</sub>')
+                            .replace(/\\bar\{v\}/g, '<span class="italic font-serif">v&#772;</span>')
+                            .replace(/\\dot\{s\}\(t\)/g, '<span class="italic font-serif">s&#775;</span>(t)')
+                            .replace(/\\dot\{v\}\(t\)/g, '<span class="italic font-serif">v&#775;</span>(t)')
+                            .replace(/\\frac\{1\}\{2\}/g, '½')
+                            .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="math-frac"><span>$1</span><span>$2</span></span>')
+                            .replace(/\\lim_\{\\Delta t \\to 0\}/g, 'lim<sub>Δt→0</sub>')
+                            .replace(/\\Delta/g, 'Δ')
+                            .replace(/\\cdot/g, '·')
+                            .replace(/\\neq/g, '≠')
+                            .replace(/\\rightarrow/g, '→')
+                            .replace(/\\text\{([^}]+)\}/g, '$1')
+                            .replace(/_0/g, '<sub>0</sub>')
+                            .replace(/\^2/g, '²');
+                    });
+                }
+            });
+        }
+
+        // Event-Listener für Regler & Checkboxen
+        els.sliderT.addEventListener('input', (e) => {
+            state.t = parseFloat(e.target.value);
+            if (state.isPlaying) togglePlay(false);
+            updateAll();
+        });
+
+        els.sliderS0.addEventListener('input', (e) => {
+            state.s0 = parseFloat(e.target.value);
+            updateAll();
+        });
+
+        els.sliderV0.addEventListener('input', (e) => {
+            state.v0Slider = parseFloat(e.target.value);
+            if (!state.v0Enabled) {
+                state.v0Enabled = true;
+                els.checkV0.checked = true;
+            }
+            updateAll();
+        });
+
+        els.sliderA.addEventListener('input', (e) => {
+            state.aSlider = parseFloat(e.target.value);
+            if (!state.aEnabled) {
+                state.aEnabled = true;
+                els.checkA.checked = true;
+            }
+            updateAll();
+        });
+
+        els.checkV0.addEventListener('change', (e) => {
+            state.v0Enabled = e.target.checked;
+            updateAll();
+        });
+
+        els.checkA.addEventListener('change', (e) => {
+            state.aEnabled = e.target.checked;
+            updateAll();
+        });
+
+        els.showVecV.addEventListener('change', (e) => { state.showVecV = e.target.checked; updateAll(); });
+        els.showVecA.addEventListener('change', (e) => { state.showVecA = e.target.checked; updateAll(); });
+        els.showStrobe.addEventListener('change', (e) => { state.showStrobe = e.target.checked; updateAll(); });
+
+        els.toggleGraphS.addEventListener('change', (e) => {
+            state.showGraphS = e.target.checked;
+            document.getElementById('wrapGraphS').classList.toggle('hidden', !state.showGraphS);
+            updateAll();
+        });
+        els.toggleGraphV.addEventListener('change', (e) => {
+            state.showGraphV = e.target.checked;
+            document.getElementById('wrapGraphV').classList.toggle('hidden', !state.showGraphV);
+            updateAll();
+        });
+        els.toggleGraphA.addEventListener('change', (e) => {
+            state.showGraphA = e.target.checked;
+            document.getElementById('wrapGraphA').classList.toggle('hidden', !state.showGraphA);
+            updateAll();
+        });
+        els.toggleTangent.addEventListener('change', (e) => { state.showTangent = e.target.checked; updateAll(); });
+        els.toggleIntegral.addEventListener('change', (e) => { state.showIntegral = e.target.checked; updateAll(); });
+
+        els.btnPlayPause.addEventListener('click', () => {
+            if (!state.isPlaying && state.t >= state.tMax) {
+                state.t = 0;
+            }
+            togglePlay(!state.isPlaying);
+        });
+
+        els.btnReset.addEventListener('click', () => {
+            togglePlay(false);
+            state.t = 0;
+            updateAll();
+        });
+
+        els.btnStepBack.addEventListener('click', () => {
+            togglePlay(false);
+            state.t = Math.max(0, state.t - 0.2);
+            updateAll();
+        });
+
+        function togglePlay(playState) {
+            state.isPlaying = playState;
+            els.iconPlay.classList.toggle('hidden', state.isPlaying);
+            els.iconPause.classList.toggle('hidden', !state.isPlaying);
+            els.textPlayPause.textContent = state.isPlaying ? 'Pause' : (state.t > 0 && state.t < state.tMax ? 'Weiter' : 'Start');
+            if (state.isPlaying) {
+                state.lastFrameTime = performance.now();
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        function setSimSpeed(speed) {
+            state.simSpeed = speed;
+            ['05', '1', '2'].forEach(id => {
+                const btn = document.getElementById('speed' + id);
+                btn.className = 'px-2 py-0.5 rounded text-slate-400 hover:text-white transition';
+            });
+            const activeId = speed === 0.5 ? '05' : (speed === 1 ? '1' : '2');
+            document.getElementById('speed' + activeId).className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold transition';
+        }
+
+        function resetParam(param) {
+            if (param === 's0') {
+                state.s0 = 0;
+                els.sliderS0.value = 0;
+            } else if (param === 'v0') {
+                state.v0Slider = 0;
+                els.sliderV0.value = 0;
+            } else if (param === 'a') {
+                state.aSlider = 0;
+                els.sliderA.value = 0;
+            }
+            updateAll();
+        }
+
+        function setGraphLayout(mode) {
+            state.graphLayout = mode;
+            const splitEl = document.getElementById('splitGraphsContainer');
+            const combEl = document.getElementById('combinedGraphContainer');
+            const btnSplit = document.getElementById('btnViewSplit');
+            const btnComb = document.getElementById('btnViewCombined');
+
+            if (mode === 'split') {
+                splitEl.classList.remove('hidden');
+                combEl.classList.add('hidden');
+                btnSplit.className = 'px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold transition';
+                btnComb.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-medium transition';
+            } else {
+                splitEl.classList.add('hidden');
+                combEl.classList.remove('hidden');
+                btnComb.className = 'px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold transition';
+                btnSplit.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-medium transition';
+            }
+            updateAll();
+        }
+
+        function applyPreset(name) {
+            togglePlay(false);
+            state.t = 0;
+            if (name === 'uniform') {
+                state.s0 = 0;
+                state.v0Enabled = true;
+                state.v0Slider = 8.0;
+                state.aEnabled = false;
+                state.aSlider = 0.0;
+            } else if (name === 'accel_rest') {
+                state.s0 = 0;
+                state.v0Enabled = false;
+                state.v0Slider = 0.0;
+                state.aEnabled = true;
+                state.aSlider = 2.4;
+            } else if (name === 'braking') {
+                state.s0 = 0;
+                state.v0Enabled = true;
+                state.v0Slider = 16.0;
+                state.aEnabled = true;
+                state.aSlider = -2.0;
+            } else if (name === 'turnaround') {
+                state.s0 = -20;
+                state.v0Enabled = true;
+                state.v0Slider = 15.0;
+                state.aEnabled = true;
+                state.aSlider = -3.0;
+            }
+
+            els.sliderS0.value = state.s0;
+            els.sliderV0.value = state.v0Slider;
+            els.sliderA.value = state.aSlider;
+            els.checkV0.checked = state.v0Enabled;
+            els.checkA.checked = state.aEnabled;
+            updateAll();
+        }
+
+        // ============================================================================
+        // 3. INTERAKTIVES SCRUBBING IN DEN DIAGRAMMEN
+        // ============================================================================
+        const GRAPH_PADDING = { left: 58, right: 24, top: 18, bottom: 30 };
+
+        function setupCanvasScrubbing(canvas) {
+            let isDragging = false;
+
+            function updateTimeFromPointer(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const x = clientX - rect.left;
+                const plotWidth = rect.width - GRAPH_PADDING.left - GRAPH_PADDING.right;
+                if (plotWidth <= 0) return;
+
+                const ratio = Math.max(0, Math.min(1, (x - GRAPH_PADDING.left) / plotWidth));
+                state.t = ratio * state.tMax;
+                if (state.isPlaying) togglePlay(false);
+                updateAll();
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updateTimeFromPointer(e);
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) updateTimeFromPointer(e);
+            });
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                updateTimeFromPointer(e);
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (isDragging) updateTimeFromPointer(e);
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+
+        [els.canvasS, els.canvasV, els.canvasA, els.canvasCombined].forEach(setupCanvasScrubbing);
+
+        // ============================================================================
+        // 4. ANIMATIONSSCHLEIFE
+        // ============================================================================
+        function animationLoop(now) {
+            if (!state.isPlaying) return;
+            const dt = ((now - state.lastFrameTime) / 1000) * state.simSpeed;
+            state.lastFrameTime = now;
+
+            state.t += dt;
+            if (state.t >= state.tMax) {
+                state.t = state.tMax;
+                togglePlay(false);
+            }
+            updateAll();
+
+            if (state.isPlaying) {
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        // ============================================================================
+        // 5. UI, FORMELN & ZAHLENWERTE AKTUALISIEREN
+        // ============================================================================
+        function updateUIAndFormulas() {
+            const t = state.t;
+            const s0 = state.s0;
+            const v0 = getEffectiveV0();
+            const a = getEffectiveA();
+            const s = calcS(t);
+            const v = calcV(t);
+            const deltaS = s - s0;
+            const avgV = t > 0.0001 ? (deltaS / t) : v0;
+
+            // Slider & Labels synchronisieren
+            els.sliderT.value = t.toFixed(2);
+            document.getElementById('labelT').textContent = `${t.toFixed(2)} s`;
+            document.getElementById('labelS0').textContent = `${s0.toFixed(1)} m`;
+            document.getElementById('labelV0').textContent = `${v0.toFixed(1)} m/s`;
+            document.getElementById('labelA').textContent = `${a.toFixed(1)} m/s²`;
+
+            els.sliderV0.disabled = !state.v0Enabled;
+            els.sliderA.disabled = !state.aEnabled;
+
+            document.getElementById('cardV0').className = state.v0Enabled
+                ? 'bg-slate-950/80 p-3.5 rounded-xl border border-emerald-500/40 space-y-2 transition'
+                : 'bg-slate-950/40 p-3.5 rounded-xl border border-slate-800 space-y-2 transition opacity-75';
+
+            document.getElementById('cardA').className = state.aEnabled
+                ? 'bg-slate-950/80 p-3.5 rounded-xl border border-rose-500/40 space-y-2 transition'
+                : 'bg-slate-950/40 p-3.5 rounded-xl border border-slate-800 space-y-2 transition opacity-75';
+
+            document.getElementById('hintV0').textContent = state.v0Enabled
+                ? `Aktiv: Körper startet bei t = 0 s mit v₀ = ${v0.toFixed(1)} m/s.`
+                : `Abgewählt (v₀ = 0 m/s): Körper startet aus der Ruhe.`;
+
+            const isUniform = Math.abs(a) < 1e-5;
+            document.getElementById('hintA').textContent = !isUniform
+                ? `Aktiv (a = ${a.toFixed(1)} m/s²): Gleichmäßig beschleunigte Bewegung (Parabel im s-t-Diagramm).`
+                : `Abgewählt (a = 0 m/s²): Gleichförmige Bewegung mit konstanter Geschwindigkeit (Gerade im s-t-Diagramm).`;
+
+            // Top Badge & Mode Name
+            const badge = document.getElementById('motionModeBadge');
+            const modeName = document.getElementById('formulaModeName');
+            if (isUniform) {
+                if (Math.abs(v0) < 1e-5) {
+                    badge.textContent = 'Ruhezustand (v = 0, a = 0)';
+                    badge.className = 'px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-700 text-slate-300 border border-slate-600';
+                    modeName.textContent = 'Ruhezustand (v₀ = 0, a = 0)';
+                    modeName.className = 'text-slate-300 font-semibold';
+                } else {
+                    badge.textContent = 'Gleichförmige Bewegung (a = 0)';
+                    badge.className = 'px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30';
+                    modeName.textContent = 'Gleichförmige Bewegung (a = 0, v = konst.)';
+                    modeName.className = 'text-blue-400 font-semibold';
+                }
+            } else {
+                badge.textContent = a > 0 ? 'Gleichmäßig beschleunigte Bewegung (a > 0)' : 'Gleichmäßig verzögerte Bewegung (a < 0)';
+                badge.className = 'px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                modeName.textContent = `Gleichmäßig beschleunigte Bewegung (a = ${a.toFixed(1)} m/s²)`;
+                modeName.className = 'text-emerald-400 font-semibold';
+            }
+
+            // Telemetrie-Leiste aktualisieren
+            document.getElementById('valTime').textContent = `${t.toFixed(2)} s`;
+            document.getElementById('valPos').textContent = `${s.toFixed(2)} m`;
+            document.getElementById('valDeltaS').textContent = `Δs: ${deltaS >= 0 ? '+' : ''}${deltaS.toFixed(1)} m`;
+            document.getElementById('valVel').textContent = `${v.toFixed(2)} m/s`;
+            document.getElementById('valVelKmh').textContent = `${(v * 3.6).toFixed(1)} km/h`;
+            document.getElementById('valAcc').textContent = `${a.toFixed(2)} m/s²`;
+            document.getElementById('valAccState').textContent = isUniform ? 'a = 0 (unbeschl.)' : (a > 0 ? 'beschleunigt' : 'verzögert');
+            document.getElementById('valAvgVel').textContent = `${avgV.toFixed(2)} m/s`;
+
+            // Diagramm-Formel-Badges
+            document.getElementById('graphFormulaBadgeS').textContent = isUniform
+                ? `s(t) = v₀ · t + s₀ = ${v0.toFixed(1)}·t ${s0 >= 0 ? '+ ' + s0.toFixed(1) : '- ' + Math.abs(s0).toFixed(1)}`
+                : `s(t) = ½·a·t² + v₀·t + s₀ = ${(0.5 * a).toFixed(2)}·t² ${v0 >= 0 ? '+ ' + v0.toFixed(1) : '- ' + Math.abs(v0).toFixed(1)}·t ${s0 >= 0 ? '+ ' + s0.toFixed(1) : '- ' + Math.abs(s0).toFixed(1)}`;
+
+            document.getElementById('graphFormulaBadgeV').textContent = isUniform
+                ? `v(t) = v₀ = ${v0.toFixed(1)} m/s (konstant)`
+                : `v(t) = a · t + v₀ = ${a.toFixed(1)}·t ${v0 >= 0 ? '+ ' + v0.toFixed(1) : '- ' + Math.abs(v0).toFixed(1)}`;
+
+            document.getElementById('graphFormulaBadgeA').textContent = `a(t) = ${a.toFixed(1)} m/s² (konstant)`;
+
+            // Sektion 4: Dynamische Formelsammlung mit eingesetzten Zahlenwerten
+            document.getElementById('formulaTimeHeader').textContent = `t = ${t.toFixed(2)} s`;
+
+            // 1. Weg-Zeit-Gesetz
+            if (isUniform) {
+                document.getElementById('activeFormulaS').textContent = Math.abs(v0) < 1e-5 ? 's(t) = s₀' : 's(t) = v₀ · t + s₀';
+                document.getElementById('calcStepS').textContent = `s(${t.toFixed(2)}) = ${v0.toFixed(2)} m/s · ${t.toFixed(2)} s + (${s0.toFixed(2)} m)`;
+            } else {
+                document.getElementById('activeFormulaS').textContent = !state.v0Enabled ? 's(t) = ½ · a · t² + s₀' : 's(t) = ½ · a · t² + v₀ · t + s₀';
+                document.getElementById('calcStepS').textContent = `s(${t.toFixed(2)}) = 0.5 · (${a.toFixed(2)}) · (${t.toFixed(2)})² + (${v0.toFixed(2)}) · ${t.toFixed(2)} + (${s0.toFixed(2)})`;
+            }
+            document.getElementById('calcResS').textContent = `s(${t.toFixed(2)} s) = ${s.toFixed(2)} m   (Wegstrecke Δs = ${deltaS.toFixed(2)} m)`;
+
+            // 2. Geschwindigkeits-Zeit-Gesetz
+            if (isUniform) {
+                document.getElementById('activeFormulaV').textContent = 'v(t) = v₀ = konst.';
+                document.getElementById('calcStepV').textContent = `v(${t.toFixed(2)}) = v₀ = ${v0.toFixed(2)} m/s (da a = 0)`;
+            } else {
+                document.getElementById('activeFormulaV').textContent = !state.v0Enabled ? 'v(t) = a · t' : 'v(t) = a · t + v₀';
+                document.getElementById('calcStepV').textContent = `v(${t.toFixed(2)}) = (${a.toFixed(2)} m/s²) · ${t.toFixed(2)} s + (${v0.toFixed(2)} m/s)`;
+            }
+            document.getElementById('calcResV').textContent = `v(${t.toFixed(2)} s) = ${v.toFixed(2)} m/s   (${(v * 3.6).toFixed(1)} km/h)`;
+
+            // 3. Beschleunigungs-Gesetz
+            const deltaV = v - v0;
+            document.getElementById('activeFormulaA').textContent = isUniform ? 'a(t) = 0' : 'a(t) = a = konst.';
+            document.getElementById('calcStepA').textContent = `Δv = a · t = (${a.toFixed(2)} m/s²) · ${t.toFixed(2)} s = ${deltaV >= 0 ? '+' : ''}${deltaV.toFixed(2)} m/s`;
+            document.getElementById('calcResA').textContent = `a(${t.toFixed(2)} s) = ${a.toFixed(2)} m/s²`;
+
+            // 4. Torricelli-Gleichung
+            const lhsTorr = v * v - v0 * v0;
+            const rhsTorr = 2 * a * deltaS;
+            document.getElementById('activeFormulaTorricelli').textContent = isUniform ? 'v² - v₀² = 0 (da a = 0)' : 'v(t)² - v₀² = 2 · a · Δs';
+            document.getElementById('calcStepTorricelli').textContent = `Links: v² - v₀² = (${v.toFixed(2)})² - (${v0.toFixed(2)})² = ${lhsTorr.toFixed(2)} m²/s²`;
+            document.getElementById('calcResTorricelli').textContent = `Rechts: 2 · a · Δs = 2 · (${a.toFixed(2)}) · (${deltaS.toFixed(2)}) = ${rhsTorr.toFixed(2)} m²/s²`;
+
+            // 5. Durchschnitts- & Momentangeschwindigkeit
+            if (t > 0.0001) {
+                document.getElementById('calcAvgVelDetail').textContent = `v̄ = Δs / Δt = (${s.toFixed(2)} - (${s0.toFixed(2)})) m / ${t.toFixed(2)} s = ${avgV.toFixed(2)} m/s`;
+            } else {
+                document.getElementById('calcAvgVelDetail').textContent = `Für t → 0 s entspricht v̄ der Anfangsgeschwindigkeit v₀ = ${v0.toFixed(2)} m/s`;
+            }
+            document.getElementById('calcInstVelDetail').textContent = `Tangentensteigung m = ds/dt(${t.toFixed(2)} s) = ${v.toFixed(2)} m/s`;
+        }
+
+        // ============================================================================
+        // 6. CANVAS-HILFSFUNKTIONEN (High-DPI Skalierung & Pfeile)
+        // ============================================================================
+        function prepareCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            const width = Math.max(10, Math.floor(rect.width));
+            const height = Math.max(10, Math.floor(rect.height));
+
+            if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+            }
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { ctx, width, height };
+        }
+
+        function drawVectorArrow(ctx, x1, y1, x2, y2, color, label, valueText) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const len = Math.hypot(dx, dy);
+            if (len < 4) return;
+
+            const headLen = Math.min(11, Math.max(7, len * 0.28));
+            const angle = Math.atan2(dy, dx);
+
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            // Schaft
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Pfeilspitze
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+
+            // Label-Badge
+            ctx.font = '600 11px "JetBrains Mono", monospace';
+            const fullText = `${label} = ${valueText}`;
+            const textWidth = ctx.measureText(fullText).width;
+            const midX = (x1 + x2) / 2;
+            const badgeX = Math.max(8, Math.min(ctx.canvas.width / (window.devicePixelRatio || 1) - textWidth - 16, midX - textWidth / 2 - 4));
+            const badgeY = y1 - 22;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.beginPath();
+            ctx.roundRect(badgeX, badgeY, textWidth + 10, 18, 4);
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(fullText, badgeX + 5, badgeY + 9);
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // 7. VISUELLE ANIMATIONSSPUR ZEICHNEN (Messstrecke & Fahrzeug)
+        // ============================================================================
+        function getRangeForFunction(fn, minSpan = 20) {
+            let minVal = Infinity;
+            let maxVal = -Infinity;
+            for (let i = 0; i <= 100; i++) {
+                const time = (i / 100) * state.tMax;
+                const val = fn(time);
+                if (val < minVal) minVal = val;
+                if (val > maxVal) maxVal = val;
+            }
+            minVal = Math.min(minVal, 0);
+            maxVal = Math.max(maxVal, 0);
+
+            if (maxVal - minVal < minSpan) {
+                const mid = (maxVal + minVal) / 2;
+                minVal = mid - minSpan / 2;
+                maxVal = mid + minSpan / 2;
+            }
+            const pad = (maxVal - minVal) * 0.12;
+            return { min: minVal - pad, max: maxVal + pad };
+        }
+
+        function computeNiceStep(range, targetSteps = 8) {
+            const rough = range / targetSteps;
+            const pow10 = Math.pow(10, Math.floor(Math.log10(rough)));
+            const norm = rough / pow10;
+            let factor = 1;
+            if (norm > 5) factor = 10;
+            else if (norm > 2) factor = 5;
+            else if (norm > 1) factor = 2;
+            return factor * pow10;
+        }
+
+        function drawTrack() {
+            const { ctx, width, height } = prepareCanvas(els.trackCanvas);
+            ctx.clearRect(0, 0, width, height);
+
+            // Hintergrund-Raster
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+            ctx.lineWidth = 1;
+            for (let gx = 0; gx < width; gx += 32) {
+                ctx.beginPath();
+                ctx.moveTo(gx, 0);
+                ctx.lineTo(gx, height);
+                ctx.stroke();
+            }
+
+            // Dynamischen Wertebereich der Messstrecke berechnen, sodass die gesamte Bewegung [0..10s] sichtbar ist
+            const sRange = getRangeForFunction(calcS, 60);
+            const padX = 48;
+            const trackW = width - padX * 2;
+            const trackY = height * 0.64;
+
+            const sToX = (sVal) => padX + ((sVal - sRange.min) / (sRange.max - sRange.min)) * trackW;
+
+            // Zurückgelegter Pfad von s0 bis s(t) als leuchtendes Band
+            const xStart = sToX(state.s0);
+            const currentS = calcS(state.t);
+            const currentV = calcV(state.t);
+            const currentA = calcA(state.t);
+            const xNow = sToX(currentS);
+
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.18)';
+            ctx.fillRect(Math.min(xStart, xNow), trackY - 8, Math.abs(xNow - xStart), 8);
+
+            // Fahrbahn / Messschiene
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(padX - 15, trackY);
+            ctx.lineTo(width - padX + 15, trackY);
+            ctx.stroke();
+
+            // Skala & Maßstab-Markierungen
+            const step = computeNiceStep(sRange.max - sRange.min, Math.max(5, Math.floor(trackW / 95)));
+            const firstTick = Math.ceil(sRange.min / step) * step;
+
+            ctx.font = '500 11px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            for (let val = firstTick; val <= sRange.max; val += step) {
+                const tx = sToX(val);
+                const isZero = Math.abs(val) < 1e-6;
+
+                ctx.strokeStyle = isZero ? '#94a3b8' : '#475569';
+                ctx.lineWidth = isZero ? 2 : 1.5;
+                ctx.beginPath();
+                ctx.moveTo(tx, trackY);
+                ctx.lineTo(tx, trackY + (isZero ? 14 : 9));
+                ctx.stroke();
+
+                ctx.fillStyle = isZero ? '#f8fafc' : '#94a3b8';
+                ctx.fillText(`${Math.round(val * 10) / 10} m`, tx, trackY + 25);
+            }
+
+            // Startposition s0 Fähnchen
+            ctx.save();
+            ctx.strokeStyle = '#60a5fa';
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(xStart, trackY - 48);
+            ctx.lineTo(xStart, trackY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = '600 10px "JetBrains Mono", monospace';
+            ctx.fillText(`s₀ = ${state.s0.toFixed(0)}m`, xStart, trackY + 42);
+            ctx.restore();
+
+            // Stroboskop-Marken (Position zu jeder vollen Sekunde bis zum aktuellen t)
+            if (state.showStrobe) {
+                for (let sec = 0; sec <= Math.floor(state.t); sec++) {
+                    const sSec = calcS(sec);
+                    const xSec = sToX(sSec);
+
+                    ctx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+                    ctx.strokeStyle = 'rgba(96, 165, 250, 0.8)';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.arc(xSec, trackY - 14, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#93c5fd';
+                    ctx.font = '500 9px "JetBrains Mono", monospace';
+                    ctx.fillText(`${sec}s`, xSec, trackY - 25);
+                }
+            }
+
+            // Fahrzeug / Messwagen zeichnen
+            const carW = 54;
+            const carH = 24;
+            const carX = xNow - carW / 2;
+            const carY = trackY - carH - 6;
+
+            // Schatten / Glow
+            ctx.save();
+            ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+            ctx.shadowBlur = 14;
+
+            // Karosserie
+            const grad = ctx.createLinearGradient(carX, carY, carX, carY + carH);
+            grad.addColorStop(0, '#3b82f6');
+            grad.addColorStop(1, '#1d4ed8');
+            ctx.fillStyle = grad;
+            ctx.strokeStyle = '#93c5fd';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(carX, carY, carW, carH, 7);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // Cockpit-Kuppel
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.roundRect(carX + 12, carY + 4, carW - 24, 9, 4);
+            ctx.fill();
+
+            // Räder
+            [carX + 12, carX + carW - 12].forEach(wx => {
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(wx, trackY - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            // Schwerpunkt-Punkt am Fahrzeug
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(xNow, carY + carH / 2, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Vektorpfeil für Geschwindigkeit v(t)
+            if (state.showVecV && Math.abs(currentV) > 0.05) {
+                const maxVArrowPx = Math.min(150, trackW * 0.28);
+                const vLen = Math.sign(currentV) * Math.min(maxVArrowPx, Math.max(24, Math.abs(currentV) * 5.2));
+                const vy = carY - 10;
+                drawVectorArrow(
+                    ctx,
+                    xNow,
+                    vy,
+                    xNow + vLen,
+                    vy,
+                    '#10b981',
+                    'v',
+                    `${currentV.toFixed(1)} m/s`
+                );
+            }
+
+            // Vektorpfeil für Beschleunigung a(t)
+            if (state.showVecA && Math.abs(currentA) > 0.05) {
+                const maxAArrowPx = Math.min(120, trackW * 0.22);
+                const aLen = Math.sign(currentA) * Math.min(maxAArrowPx, Math.max(24, Math.abs(currentA) * 11));
+                const ay = carY - 34;
+                drawVectorArrow(
+                    ctx,
+                    xNow,
+                    ay,
+                    xNow + aLen,
+                    ay,
+                    '#f43f5e',
+                    'a',
+                    `${currentA.toFixed(1)} m/s²`
+                );
+            }
+        }
+
+        // ============================================================================
+        // 8. INTERAKTIVE DIAGRAMME ZEICHNEN (s(t), v(t), a(t) & Kombiniert)
+        // ============================================================================
+        function drawSingleGraph(canvas, fn, unit, color, labelName, options = {}) {
+            const { ctx, width, height } = prepareCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+
+            const pad = GRAPH_PADDING;
+            const plotW = width - pad.left - pad.right;
+            const plotH = height - pad.top - pad.bottom;
+            if (plotW <= 10 || plotH <= 10) return;
+
+            const yRange = getRangeForFunction(fn, options.minSpan || 10);
+            const tToX = (tVal) => pad.left + (tVal / state.tMax) * plotW;
+            const valToY = (vVal) => pad.top + plotH - ((vVal - yRange.min) / (yRange.max - yRange.min)) * plotH;
+
+            // 1. Gitterlinien & Achsen
+            const yStep = computeNiceStep(yRange.max - yRange.min, Math.max(3, Math.floor(plotH / 38)));
+            const firstY = Math.ceil(yRange.min / yStep) * yStep;
+
+            ctx.font = '500 10px "JetBrains Mono", monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let yv = firstY; yv <= yRange.max; yv += yStep) {
+                const py = valToY(yv);
+                const isZero = Math.abs(yv) < 1e-6;
+                ctx.strokeStyle = isZero ? 'rgba(148, 163, 184, 0.55)' : 'rgba(51, 65, 85, 0.45)';
+                ctx.lineWidth = isZero ? 1.5 : 1;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, py);
+                ctx.lineTo(pad.left + plotW, py);
+                ctx.stroke();
+
+                ctx.fillStyle = isZero ? '#e2e8f0' : '#94a3b8';
+                ctx.fillText(`${Math.round(yv * 10) / 10}`, pad.left - 8, py);
+            }
+
+            // Vertikale Zeit-Gitterlinien (0s .. 10s)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let tv = 0; tv <= state.tMax; tv += 1) {
+                const px = tToX(tv);
+                ctx.strokeStyle = tv === 0 ? 'rgba(148, 163, 184, 0.55)' : 'rgba(51, 65, 85, 0.4)';
+                ctx.lineWidth = tv === 0 ? 1.5 : 1;
+                ctx.beginPath();
+                ctx.moveTo(px, pad.top);
+                ctx.lineTo(px, pad.top + plotH);
+                ctx.stroke();
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(`${tv}s`, px, pad.top + plotH + 7);
+            }
+
+            const yZero = valToY(0);
+
+            // 2. Optional: Flächeninhalt (Integral) unter der Kurve von 0 bis t
+            if (options.drawIntegral && state.showIntegral && state.t > 0.01) {
+                ctx.save();
+                ctx.fillStyle = options.integralColor || 'rgba(16, 185, 129, 0.16)';
+                ctx.beginPath();
+                ctx.moveTo(tToX(0), yZero);
+                const steps = 60;
+                for (let i = 0; i <= steps; i++) {
+                    const ti = (i / steps) * state.t;
+                    ctx.lineTo(tToX(ti), valToY(fn(ti)));
+                }
+                ctx.lineTo(tToX(state.t), yZero);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 3. Gesamte Kurve [0..10s] als gestrichelte Vorschau
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 0.32;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            for (let i = 0; i <= 120; i++) {
+                const ti = (i / 120) * state.tMax;
+                const px = tToX(ti);
+                const py = valToY(fn(ti));
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // 4. Durchgezogene Kurve von 0 bis zum aktuellen Zeitpunkt t
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const activeSteps = Math.max(2, Math.ceil((state.t / state.tMax) * 120));
+            for (let i = 0; i <= activeSteps; i++) {
+                const ti = (i / activeSteps) * state.t;
+                const px = tToX(ti);
+                const py = valToY(fn(ti));
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // 5. Optional: Tangente & Steigungsdreieck im s(t)-Diagramm
+            const curVal = fn(state.t);
+            const curX = tToX(state.t);
+            const curY = valToY(curVal);
+
+            if (options.isPositionGraph && state.showTangent) {
+                const slopeV = calcV(state.t);
+                const dtSpan = 1.5; // 1.5s nach links und rechts für die Tangente
+                const t1 = Math.max(0, state.t - dtSpan);
+                const t2 = Math.min(state.tMax, state.t + dtSpan);
+                const s1 = curVal + slopeV * (t1 - state.t);
+                const s2 = curVal + slopeV * (t2 - state.t);
+
+                ctx.save();
+                // Steigungsdreieck
+                const dtTri = state.t <= 8.5 ? 1.2 : -1.2;
+                const tTri = state.t + dtTri;
+                const sTri = curVal + slopeV * dtTri;
+
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(curX, curY);
+                ctx.lineTo(tToX(tTri), curY);
+                ctx.lineTo(tToX(tTri), valToY(sTri));
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Tangentenlinie
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(tToX(t1), valToY(s1));
+                ctx.lineTo(tToX(t2), valToY(s2));
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 6. Vertikale Indikator-Linie zum aktuellen Zeitpunkt t
+            ctx.save();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(curX, pad.top);
+            ctx.lineTo(curX, pad.top + plotH);
+            ctx.stroke();
+            ctx.restore();
+
+            // 7. Aktueller Punkt auf der Kurve + Wert-Badge
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(curX, curY, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Koordinaten-Tooltip direkt am Punkt
+            const badgeText = `${labelName}(${state.t.toFixed(1)}s) = ${curVal.toFixed(2)} ${unit}`;
+            ctx.font = '600 11px "JetBrains Mono", monospace';
+            const bw = ctx.measureText(badgeText).width + 12;
+            const bx = curX + 10 + bw > width - pad.right ? curX - bw - 10 : curX + 10;
+            const by = Math.max(pad.top + 4, Math.min(pad.top + plotH - 22, curY - 11));
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(bx, by, bw, 20, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(badgeText, bx + 6, by + 10);
+        }
+
+        function drawCombinedGraph() {
+            const { ctx, width, height } = prepareCanvas(els.canvasCombined);
+            ctx.clearRect(0, 0, width, height);
+
+            const pad = GRAPH_PADDING;
+            const plotW = width - pad.left - pad.right;
+            const plotH = height - pad.top - pad.bottom;
+            if (plotW <= 10 || plotH <= 10) return;
+
+            // Gemeinsame Y-Skala über alle aktivierten Kurven bestimmen
+            let minVal = -10;
+            let maxVal = 20;
+            const activeFns = [];
+            if (state.showGraphS) activeFns.push({ fn: calcS, color: '#3b82f6', name: 's', unit: 'm' });
+            if (state.showGraphV) activeFns.push({ fn: calcV, color: '#10b981', name: 'v', unit: 'm/s' });
+            if (state.showGraphA) activeFns.push({ fn: calcA, color: '#f43f5e', name: 'a', unit: 'm/s²' });
+
+            activeFns.forEach(item => {
+                const r = getRangeForFunction(item.fn, 10);
+                if (r.min < minVal) minVal = r.min;
+                if (r.max > maxVal) maxVal = r.max;
+            });
+
+            const tToX = (tVal) => pad.left + (tVal / state.tMax) * plotW;
+            const valToY = (vVal) => pad.top + plotH - ((vVal - minVal) / (maxVal - minVal)) * plotH;
+
+            // Gitter
+            const yStep = computeNiceStep(maxVal - minVal, 8);
+            const firstY = Math.ceil(minVal / yStep) * yStep;
+            ctx.font = '500 10px "JetBrains Mono", monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let yv = firstY; yv <= maxVal; yv += yStep) {
+                const py = valToY(yv);
+                const isZero = Math.abs(yv) < 1e-6;
+                ctx.strokeStyle = isZero ? 'rgba(148, 163, 184, 0.6)' : 'rgba(51, 65, 85, 0.4)';
+                ctx.lineWidth = isZero ? 1.5 : 1;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, py);
+                ctx.lineTo(pad.left + plotW, py);
+                ctx.stroke();
+
+                ctx.fillStyle = isZero ? '#f8fafc' : '#94a3b8';
+                ctx.fillText(`${Math.round(yv * 10) / 10}`, pad.left - 8, py);
+            }
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let tv = 0; tv <= state.tMax; tv += 1) {
+                const px = tToX(tv);
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(px, pad.top);
+                ctx.lineTo(px, pad.top + plotH);
+                ctx.stroke();
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(`${tv}s`, px, pad.top + plotH + 7);
+            }
+
+            // Alle aktiven Kurven zeichnen
+            activeFns.forEach((item, idx) => {
+                // Vorschau
+                ctx.save();
+                ctx.strokeStyle = item.color;
+                ctx.globalAlpha = 0.3;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                for (let i = 0; i <= 120; i++) {
+                    const ti = (i / 120) * state.tMax;
+                    const px = tToX(ti);
+                    const py = valToY(item.fn(ti));
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // Bis t durchgezogen
+                ctx.save();
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                const steps = Math.max(2, Math.ceil((state.t / state.tMax) * 120));
+                for (let i = 0; i <= steps; i++) {
+                    const ti = (i / steps) * state.t;
+                    const px = tToX(ti);
+                    const py = valToY(item.fn(ti));
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // Punkt bei t
+                const curVal = item.fn(state.t);
+                const curX = tToX(state.t);
+                const curY = valToY(curVal);
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(curX, curY, 5.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Badge oben links gestaffelt
+                const text = `${item.name}(${state.t.toFixed(2)}s) = ${curVal.toFixed(2)} ${item.unit}`;
+                ctx.font = '600 11px "JetBrains Mono", monospace';
+                const bw = ctx.measureText(text).width + 14;
+                const bx = pad.left + 12;
+                const by = pad.top + 10 + idx * 26;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(bx, by, bw, 22, 5);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = item.color;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, bx + 7, by + 11);
+            });
+
+            // Vertikale Zeit-Linie
+            const curX = tToX(state.t);
+            ctx.save();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(curX, pad.top);
+            ctx.lineTo(curX, pad.top + plotH);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // 9. HAUPT-RENDER-FUNKTION
+        // ============================================================================
+        function updateAll() {
+            updateUIAndFormulas();
+            drawTrack();
+
+            if (state.graphLayout === 'split') {
+                if (state.showGraphS) {
+                    drawSingleGraph(els.canvasS, calcS, 'm', '#3b82f6', 's', {
+                        minSpan: 40,
+                        isPositionGraph: true
+                    });
+                }
+                if (state.showGraphV) {
+                    drawSingleGraph(els.canvasV, calcV, 'm/s', '#10b981', 'v', {
+                        minSpan: 16,
+                        drawIntegral: true,
+                        integralColor: 'rgba(16, 185, 129, 0.16)'
+                    });
+                }
+                if (state.showGraphA) {
+                    drawSingleGraph(els.canvasA, calcA, 'm/s²', '#f43f5e', 'a', {
+                        minSpan: 8,
+                        drawIntegral: true,
+                        integralColor: 'rgba(244, 63, 94, 0.16)'
+                    });
+                }
+            } else {
+                drawCombinedGraph();
+            }
+        }
+
+        window.addEventListener('resize', updateAll);
+        window.onload = function () {
+            formatMathInDOM();
+            updateAll();
+        };
+    </script>
+</body>
+</html>
