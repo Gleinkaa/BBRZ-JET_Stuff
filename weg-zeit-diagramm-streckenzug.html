@@ -1314,6 +1314,7 @@ function setTab(name) {
   $id("tabTag").textContent = name === "wz" ? "Weg-Zeit, Streckenzug" : "Vorschub v_f = n · f";
   if (name === "wz") { drawST(); drawVT(); }
   else { updateVF(); }
+  try { history.replaceState(null, "", name === "vf" ? "#vorschub" : "#weg-zeit"); } catch (e) {}
 }
 document.querySelectorAll(".tabs [role=tab]").forEach(t =>
   t.addEventListener("click", () => setTab(t.dataset.tab)));
@@ -1338,7 +1339,8 @@ bindHover("stWrap", "stTip", "st");
 bindHover("vtWrap", "vtTip", "vt");
 render();
 updateVF();
-setTab("wz");
+setTab(location.hash === "#vorschub" ? "vf" : "wz");
+window.addEventListener("hashchange", () => setTab(location.hash === "#vorschub" ? "vf" : "wz"));
 </script>
 </body>
 </html>
