@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Formel-Labor: Weg-Zeit-Diagramm und Vorschub</title>
+<title>Formel-Labor: Weg-Zeit-Diagramm, Vorschub und Strömung</title>
 <style>
   :root{
     --background: oklch(1 0 0);
@@ -194,7 +194,8 @@
   @media (max-width:760px){
     main{ padding:16px; gap:16px; }
     .tabs{ display:flex; width:100%; }
-    .tabs [role="tab"]{ flex:1; font-size:13px; padding:0 8px; }
+    .tabs [role="tab"]{ flex:1; font-size:13px; padding:0 6px; }
+    .tabs .tab-long{ display:none; }
     header.top{ height:auto; min-height:56px; padding:10px 16px; flex-wrap:wrap; }
     .brand h1{ font-size:16px; }
     .brand .tag{ display:none; }
@@ -206,7 +207,7 @@
     thead th:nth-child(4), tbody td:nth-child(4){ display:none; }
   }
   @media print{
-    header.top, .table-tools, .presets, .toggles, #playBtn, #speedCtl, .top-actions{ display:none !important; }
+    header.top, .table-tools, .presets, .toggles, #playBtn, #speedCtl, #sgControls, .top-actions{ display:none !important; }
     body{ background:#fff; color:#000; }
     .card{ box-shadow:none; break-inside:avoid; }
     canvas{ height:300px; }
@@ -231,7 +232,8 @@
 <main>
   <nav class="tabs" role="tablist" aria-label="Bereiche">
     <button role="tab" id="tab-wz" data-tab="wz" aria-selected="true" aria-controls="pane-wz" type="button">Weg-Zeit</button>
-    <button role="tab" id="tab-vf" data-tab="vf" aria-selected="false" aria-controls="pane-vf" type="button">Vorschub v_f = n · f</button>
+    <button role="tab" id="tab-vf" data-tab="vf" aria-selected="false" aria-controls="pane-vf" type="button">Vorschub<span class="tab-long">&nbsp;v_f = n · f</span></button>
+    <button role="tab" id="tab-sg" data-tab="sg" aria-selected="false" aria-controls="pane-sg" type="button">Strömung<span class="tab-long">&nbsp;v = Q / A</span></button>
   </nav>
 
   <div class="pane" id="pane-wz" role="tabpanel" aria-labelledby="tab-wz">
@@ -467,10 +469,119 @@
       <p class="note">Einheiten prüfen: n in 1/min mal f in mm ergibt mm/min. Für m/min durch 1000 teilen. Die Hauptzeit ist Weg geteilt durch Vorschubgeschwindigkeit.</p>
     </section>
   </div>
+
+  <div class="pane" id="pane-sg" role="tabpanel" aria-labelledby="tab-sg" hidden>
+
+    <section class="metrics" aria-label="Kennwerte Strömung">
+      <div class="card">
+        <p class="metric-label">Volumenstrom Q</p>
+        <div class="metric-val" id="sQ">0<small>l/min</small></div>
+        <p class="metric-foot" id="sQfoot"></p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Strömungsgeschwindigkeit v₁</p>
+        <div class="metric-val" id="sV1">0<small>m/s</small></div>
+        <p class="metric-foot" id="sV1foot"></p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Strömungsgeschwindigkeit v₂</p>
+        <div class="metric-val" id="sV2">0<small>m/s</small></div>
+        <p class="metric-foot" id="sV2foot"></p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Verhältnis v₂ : v₁</p>
+        <div class="metric-val" id="sRatio">0</div>
+        <p class="metric-foot" id="sRatioFoot"></p>
+      </div>
+    </section>
+
+    <div class="split">
+      <section class="card">
+        <h2>Eingaben</h2>
+        <p class="card-sub">Was ist gegeben? Dann Durchmesser eintragen.</p>
+
+        <div class="seg-row mb" id="sgGiven">
+          <button class="seg" data-given="q" aria-pressed="true" type="button">Q gegeben</button>
+          <button class="seg" data-given="v" aria-pressed="false" type="button">v₁ gegeben</button>
+        </div>
+
+        <div id="sgViaQ">
+          <div class="field">
+            <label for="inQ">Volumenstrom Q</label>
+            <div class="row"><input id="inQ" class="num" type="number" step="1" min="0" value="40"><span class="unit" id="qUnitLbl">l/min</span></div>
+          </div>
+          <div class="seg-row mb" id="sgUnit">
+            <button class="seg" data-qunit="lmin" aria-pressed="true" type="button">l/min</button>
+            <button class="seg" data-qunit="ls" aria-pressed="false" type="button">l/s</button>
+            <button class="seg" data-qunit="m3h" aria-pressed="false" type="button">m³/h</button>
+          </div>
+        </div>
+
+        <div id="sgViaV" hidden>
+          <div class="field">
+            <label for="inV1">Strömungsgeschwindigkeit v₁</label>
+            <div class="row"><input id="inV1" class="num" type="number" step="0.1" min="0" value="1.5"><span class="unit">m/s</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="inD1">Innendurchmesser d₁</label>
+          <div class="row"><input id="inD1" class="num" type="number" step="1" min="0" value="25"><span class="unit">mm</span></div>
+        </div>
+        <label class="check" for="useD2">
+          <input id="useD2" type="checkbox" checked>
+          Zweiter Querschnitt d₂ (Verengung oder Erweiterung)
+        </label>
+        <div class="field" id="d2Field">
+          <label for="inD2">Innendurchmesser d₂</label>
+          <div class="row"><input id="inD2" class="num" type="number" step="1" min="0" value="12"><span class="unit">mm</span></div>
+        </div>
+
+        <div class="presets" id="sgPresets">
+          <span class="lbl">Beispiele</span>
+          <button class="seg" data-sgpreset="rohr" type="button">Rohr</button>
+          <button class="seg" data-sgpreset="duese" type="button">Düse</button>
+          <button class="seg" data-sgpreset="hydraulik" type="button">Hydraulik</button>
+        </div>
+
+        <p class="note">Richtwerte für Rohrleitungen: Wasser 1 bis 3 m/s, Hydrauliköl in der Saugleitung 0,5 bis 1,5 m/s, in der Druckleitung 3 bis 6 m/s.</p>
+      </section>
+
+      <section class="card">
+        <div class="chart-head">
+          <div>
+            <h2>Rohr mit Querschnittsänderung</h2>
+            <p class="card-sub" style="margin-bottom:0">Durch jeden Querschnitt fließt in derselben Zeit dasselbe Volumen. Wo das Rohr enger ist, muss die Flüssigkeit schneller sein.</p>
+          </div>
+          <div class="toggles">
+            <button class="seg" id="tPakete" aria-pressed="true" type="button">Volumenpakete</button>
+          </div>
+        </div>
+        <div class="chartwrap">
+          <canvas id="sgchart" aria-label="Animierte Rohrströmung mit Geschwindigkeitsverlauf"></canvas>
+        </div>
+        <div class="table-tools" id="sgControls" style="margin-top:12px">
+          <button id="sgPlayBtn" class="primary" type="button">Start</button>
+          <span class="presets" style="border:0;padding:0;margin:0">
+            <button class="seg" data-sgspeed="0.5" type="button">0,5×</button>
+            <button class="seg" data-sgspeed="1" aria-pressed="true" type="button">1×</button>
+            <button class="seg" data-sgspeed="2" type="button">2×</button>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Rechenweg</h2>
+      <p class="card-sub">Erst alles in m und s umrechnen, dann einsetzen.</p>
+      <ol class="steps" id="sgSteps"></ol>
+      <p class="note">Kontinuitätsgleichung: Q = A₁ · v₁ = A₂ · v₂. Weil A mit d² wächst, gilt v₂ = v₁ · (d₁ / d₂)². Halber Durchmesser heißt vierfache Geschwindigkeit. Die Animation zeigt die mittlere Geschwindigkeit je Querschnitt; in Wirklichkeit ist die Strömung an der Rohrwand langsamer als in der Mitte.</p>
+    </section>
+  </div>
 </main>
 
 <footer>
-  Gebaut für die Kinematik-Aufgabe: Zeit-Weg-Streckenzug und Durchschnittsgeschwindigkeit. Rechnet im Browser, offline, ohne Abhängigkeiten.
+  Rechner für Kinematik (Weg-Zeit, Durchschnittsgeschwindigkeit), Werkstattrechnung (Vorschub) und Strömungslehre (Kontinuitätsgleichung). Rechnet im Browser, offline, ohne Abhängigkeiten.
 </footer>
 
 <script>
@@ -1018,7 +1129,7 @@ function applyTheme() {
 }
 document.getElementById("themeBtn").addEventListener("click", () => {
   state.theme = state.theme === "dark" ? "light" : "dark";
-  applyTheme(); drawST(); drawVT();
+  applyTheme(); redrawActive();
 });
 
 /* ---------- Export ---------- */
@@ -1075,7 +1186,8 @@ function exportVF() {
 }
 
 document.getElementById("pngBtn").addEventListener("click", () => {
-  if (!document.getElementById("pane-vf").hidden) exportVF();
+  if (activeTab === "vf") exportVF();
+  else if (activeTab === "sg") exportSG();
   else exportWZ();
 });
 
@@ -1325,17 +1437,383 @@ document.querySelectorAll("[data-vfpreset]").forEach(b => {
   canvas.addEventListener("touchend", () => tip.classList.remove("show"));
 })();
 
+/* ---------- Strömung: Kontinuitätsgleichung Q = A · v ---------- */
+const sgState = { given: "q", unit: "lmin", pakete: true, playing: false, speed: 1, t: 0, parts: [] };
+const Q_UNITS = {
+  lmin: { lbl: "l/min", toSI: 1 / 60000, conv: "/ 60 000" },
+  ls:   { lbl: "l/s",   toSI: 1 / 1000,  conv: "/ 1000" },
+  m3h:  { lbl: "m³/h",  toSI: 1 / 3600,  conv: "/ 3600" }
+};
+const SG_BASE = 0.28;          // schnellste Stelle: Anteil der Rohrlänge je Sekunde bei 1×
+const SG_PAKET = 0.06;         // Paketlänge im langsamen Abschnitt, Anteil der Rohrlänge
+const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* feste gültige Stellen, für kleine SI-Werte wie 0,000667 m³/s */
+const fmtSig = (v, sig = 3) => {
+  if (!isFinite(v) || v === 0) return "0";
+  const d = Math.max(0, sig - 1 - Math.floor(Math.log10(Math.abs(v))));
+  return fmt(v, Math.min(d, 10));
+};
+
+function sgCompute() {
+  const d1 = numVal("inD1");
+  const two = $id("useD2").checked;
+  const d2 = two ? numVal("inD2") : d1;
+  const A1 = Math.PI * d1 * d1 / 4;              // mm²
+  const A2 = Math.PI * d2 * d2 / 4;              // mm²
+  const Q = sgState.given === "q"
+    ? numVal("inQ") * Q_UNITS[sgState.unit].toSI  // m³/s
+    : numVal("inV1") * A1 / 1e6;
+  const v1 = A1 > 0 ? Q / (A1 / 1e6) : 0;        // m/s
+  const v2 = A2 > 0 ? Q / (A2 / 1e6) : 0;
+  return { d1, d2, two, A1, A2, Q, v1, v2, qIn: numVal("inQ"), v1In: numVal("inV1") };
+}
+
+function updateSG() {
+  const d = sgCompute();
+  const u = Q_UNITS[sgState.unit];
+
+  $id("sQ").innerHTML = fmt(d.Q * 60000, 1) + "<small>l/min</small>";
+  $id("sQfoot").textContent = "= " + fmtSig(d.Q) + " m³/s = " + fmt(d.Q * 3600, 2) + " m³/h";
+  $id("sV1").innerHTML = fmt(d.v1, 2) + "<small>m/s</small>";
+  $id("sV1foot").textContent = "A₁ = " + fmt(d.A1, 1) + " mm² bei d₁ = " + fmt(d.d1, 1) + " mm";
+  if (d.two) {
+    $id("sV2").innerHTML = fmt(d.v2, 2) + "<small>m/s</small>";
+    $id("sV2foot").textContent = "A₂ = " + fmt(d.A2, 1) + " mm² bei d₂ = " + fmt(d.d2, 1) + " mm";
+    $id("sRatio").innerHTML = (d.v1 > 0 ? fmt(d.v2 / d.v1, 2) : "–") + "<small>× v₁</small>";
+    $id("sRatioFoot").textContent = d.d2 > 0
+      ? "= (d₁ / d₂)² = (" + fmt(d.d1, 1) + " / " + fmt(d.d2, 1) + ")²"
+      : "d₂ eintragen";
+  } else {
+    $id("sV2").innerHTML = "–";
+    $id("sV2foot").textContent = "nur ein Querschnitt";
+    $id("sRatio").innerHTML = "–";
+    $id("sRatioFoot").textContent = "zweiten Querschnitt einschalten";
+  }
+  $id("d2Field").hidden = !d.two;
+
+  const A1m = d.A1 / 1e6, A2m = d.A2 / 1e6;
+  const areaStep = (i, dd, A, Am) =>
+    "<li><div>Querschnitt: <code>A" + i + " = π · d" + i + "² / 4 = π · (" + fmt(dd, 1) + " mm)² / 4 = " +
+    fmt(A, 1) + " mm² = " + fmtSig(Am) + " m²</code></div></li>";
+  const steps = [];
+  if (sgState.given === "q") {
+    steps.push("<li><div>Volumenstrom in m³/s: <code>Q = " + fmt(d.qIn, 3) + " " + u.lbl + " = " + fmt(d.qIn, 3) + " " +
+      u.conv + " m³/s = " + fmtSig(d.Q) + " m³/s</code></div></li>");
+    steps.push(areaStep("₁", d.d1, d.A1, A1m));
+    steps.push("<li><div>Strömungsgeschwindigkeit: <code>v₁ = Q / A₁ = " + fmtSig(d.Q) + " m³/s / " + fmtSig(A1m) +
+      " m² = " + fmt(d.v1, 2) + " m/s</code></div></li>");
+  } else {
+    steps.push(areaStep("₁", d.d1, d.A1, A1m));
+    steps.push("<li><div>Volumenstrom: <code>Q = A₁ · v₁ = " + fmtSig(A1m) + " m² · " + fmt(d.v1In, 2) + " m/s = " +
+      fmtSig(d.Q) + " m³/s</code></div></li>");
+    steps.push("<li><div>In Liter pro Minute: <code>Q = " + fmtSig(d.Q) + " m³/s · 60 000 = " + fmt(d.Q * 60000, 1) +
+      " l/min</code></div></li>");
+  }
+  if (d.two) {
+    steps.push(areaStep("₂", d.d2, d.A2, A2m));
+    const flaeche = d.d2 < d.d1 ? "kleinere Fläche, schneller" : d.d2 > d.d1 ? "größere Fläche, langsamer" : "gleiche Fläche";
+    steps.push("<li><div>Gleiches Q, " + flaeche + ": <code>v₂ = Q / A₂ = " + fmtSig(d.Q) + " m³/s / " + fmtSig(A2m) +
+      " m² = " + fmt(d.v2, 2) + " m/s</code></div></li>");
+    if (d.d2 > 0) {
+      steps.push("<li><div>Probe mit der Kontinuitätsgleichung: <code>v₂ = v₁ · (d₁ / d₂)² = " + fmt(d.v1, 2) + " m/s · (" +
+        fmt(d.d1, 1) + " / " + fmt(d.d2, 1) + ")² = " + fmt(d.v2, 2) + " m/s</code></div></li>");
+    }
+  }
+  $id("sgSteps").innerHTML = steps.join("");
+  drawSG();
+}
+
+/* Rohrform und Laufzeit-Tabelle: x läuft als Anteil 0..1 über die Rohrlänge */
+function sgModel(d) {
+  const a = d.two ? 0.40 : 1, b = d.two ? 0.52 : 1;
+  const dAt = x => x <= a ? d.d1 : x >= b ? d.d2 : d.d1 + (d.d2 - d.d1) * (x - a) / (b - a);
+  const vAt = x => { const dx = dAt(x); return dx > 0 ? d.v1 * (d.d1 / dx) * (d.d1 / dx) : 0; };
+  const vmax = d.two ? Math.max(d.v1, d.v2) : d.v1;
+  const vmin = d.two ? Math.min(d.v1, d.v2) : d.v1;
+  const ok = d.d1 > 0 && (!d.two || d.d2 > 0) && vmax > 0;
+  const m = { a, b, dAt, vAt, vmax, vmin, ok, dmax: Math.max(d.d1, d.two ? d.d2 : 0) };
+  if (!ok) return m;
+  // tau[i]: Laufzeit vom Einlauf bis x = i/N bei 1×
+  const N = 400, tau = new Float64Array(N + 1);
+  for (let i = 1; i <= N; i++) {
+    const u = SG_BASE * vAt((i - 0.5) / N) / vmax;
+    tau[i] = tau[i - 1] + (1 / N) / u;
+  }
+  m.tau = tau; m.N = N; m.T = tau[N];
+  m.P = SG_PAKET / (SG_BASE * vmin / vmax);       // Paketdauer
+  m.xAt = t => {                                  // Umkehrung von tau
+    if (t <= 0) return 0;
+    if (t >= m.T) return 1;
+    let lo = 0, hi = N;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (tau[mid] <= t) lo = mid; else hi = mid; }
+    return (lo + (t - tau[lo]) / (tau[hi] - tau[lo])) / N;
+  };
+  return m;
+}
+
+function sgParticles(n) {
+  if (sgState.parts.length === n) return sgState.parts;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    // y wie die Projektion eines runden Rohrquerschnitts: in der Mitte dichter
+    let y, z;
+    do { y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (y * y + z * z > 1);
+    out.push({ p: Math.random(), y: y * 0.9 });
+  }
+  return (sgState.parts = out);
+}
+
+function sgColors() {
+  return state.theme === "dark"
+    ? { fluid: "rgba(96,165,250,0.12)", paket: "rgba(96,165,250,0.30)", dot: "rgba(147,197,253,0.95)", line: "#60a5fa" }
+    : { fluid: "rgba(37,99,235,0.07)", paket: "rgba(37,99,235,0.20)", dot: "rgba(29,78,216,0.85)", line: "#2563eb" };
+}
+
+function drawSG() {
+  const canvas = $id("sgchart");
+  if (!canvas || !canvas.getBoundingClientRect().width) return;
+  const { ctx, w, h } = setup(canvas);
+  const P = pal(), C = sgColors();
+  const d = sgCompute();
+  const m = sgModel(d);
+
+  const x0 = 50, x1 = w - 14, L = x1 - x0;
+  const topH = Math.round(h * 0.6);
+  const cy = Math.round(topH * 0.55);
+  const Rmax = Math.min(topH * 0.3, L * 0.12);
+  const X = x => x0 + x * L;
+  const rAt = x => m.dmax > 0 ? Rmax * m.dAt(x) / m.dmax : 0;
+  const mono = px => px + 'px "JetBrains Mono", ui-monospace, monospace';
+
+  const pipePath = () => {
+    ctx.beginPath();
+    const S = 120;
+    for (let i = 0; i <= S; i++) { const x = i / S; ctx.lineTo(X(x), cy - rAt(x)); }
+    for (let i = S; i >= 0; i--) { const x = i / S; ctx.lineTo(X(x), cy + rAt(x)); }
+    ctx.closePath();
+  };
+
+  // Flüssigkeit, Volumenpakete, Teilchen (alles im Rohr geclippt)
+  pipePath();
+  ctx.fillStyle = C.fluid; ctx.fill();
+  if (m.ok) {
+    ctx.save();
+    pipePath(); ctx.clip();
+    if (sgState.pakete) {
+      ctx.fillStyle = C.paket;
+      const phase = sgState.t % (2 * m.P);
+      for (let k = -1; phase + k * 2 * m.P < m.T; k++) {
+        const ta = phase + k * 2 * m.P, tb = ta + m.P;
+        if (tb <= 0) continue;
+        const xa = X(m.xAt(ta)), xb = X(m.xAt(tb));
+        ctx.fillRect(xb, cy - Rmax - 2, xa - xb, 2 * Rmax + 4);
+      }
+    }
+    const parts = sgParticles(Math.min(600, Math.round(L * 0.7)));
+    ctx.fillStyle = C.dot;
+    ctx.beginPath();
+    for (const pt of parts) {
+      const tt = ((sgState.t + pt.p * m.T) % m.T + m.T) % m.T;
+      const x = m.xAt(tt);
+      const px = X(x), py = cy + pt.y * rAt(x);
+      ctx.moveTo(px + 1.7, py);
+      ctx.arc(px, py, 1.7, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Rohrwand
+  ctx.strokeStyle = P.ink; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+  [-1, 1].forEach(sgn => {
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) { const x = i / 120; ctx.lineTo(X(x), cy + sgn * rAt(x)); }
+    ctx.stroke();
+  });
+
+  // Einlaufpfeil Q
+  ctx.strokeStyle = P.text; ctx.fillStyle = P.text; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(8, cy); ctx.lineTo(x0 - 8, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0 - 6, cy); ctx.lineTo(x0 - 12, cy - 4); ctx.lineTo(x0 - 12, cy + 4); ctx.closePath(); ctx.fill();
+  ctx.font = mono(12); ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("Q", 10, cy - 5);
+
+  // Beschriftung der Abschnitte
+  const sections = d.two
+    ? [{ x: m.a / 2, i: "₁", dd: d.d1, v: d.v1 }, { x: (m.b + 1) / 2, i: "₂", dd: d.d2, v: d.v2 }]
+    : [{ x: 0.5, i: "", dd: d.d1, v: d.v1 }];
+  sections.forEach(s => {
+    const r = rAt(s.x);
+    ctx.textAlign = "center";
+    ctx.fillStyle = P.text; ctx.font = mono(12); ctx.textBaseline = "bottom";
+    ctx.fillText("d" + s.i + " = " + fmt(s.dd, 1) + " mm", X(s.x), cy - r - 8);
+    ctx.fillStyle = P.ink; ctx.font = "600 " + mono(13); ctx.textBaseline = "top";
+    ctx.fillText("v" + s.i + " = " + fmt(s.v, 2) + " m/s", X(s.x), cy + r + 8);
+  });
+
+  // Kopfzeile im Bild: Paket-Legende und Zeitmaßstab
+  ctx.font = mono(11); ctx.textBaseline = "top"; ctx.fillStyle = P.text;
+  const legend = "▮ jedes Paket = gleiches Volumen";
+  const legendW = m.ok && sgState.pakete ? ctx.measureText(legend).width : 0;
+  if (legendW) { ctx.textAlign = "left"; ctx.fillText(legend, x0, 4); }
+  if (m.ok) {
+    const pxPerMm = 2 * Rmax / m.dmax;
+    const factor = (m.vmax * 1000 * pxPerMm) / (SG_BASE * sgState.speed * L);
+    const nice = v => fmt(Number(v.toPrecision(2)), 2);
+    const lbl = factor >= 1.5 ? "Zeitlupe ≈ 1 : " + nice(factor)
+      : factor <= 1 / 1.5 ? "Zeitraffer ≈ " + nice(1 / factor) + " : 1" : "≈ Echtzeit";
+    const lblY = legendW + ctx.measureText(lbl).width + 16 > L ? 18 : 4;
+    ctx.textAlign = "right"; ctx.fillText(lbl, x1, lblY);
+  } else {
+    ctx.textAlign = "center"; ctx.fillStyle = P.ink;
+    ctx.fillText("Q (oder v₁) und Durchmesser größer 0 eintragen", X(0.5), 4);
+  }
+
+  // v über der Rohrlänge
+  const gTop = topH + 28, gBot = h - 22, gh = gBot - gTop;
+  const vTop = m.ok ? niceStep(m.vmax * 1.15, 3) * Math.ceil(m.vmax * 1.15 / niceStep(m.vmax * 1.15, 3)) : 1;
+  const Y = v => gBot - (v / vTop) * gh;
+  const ty = ticks(0, vTop, 3);
+  ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ty.list.forEach(v => { const y = Math.round(Y(v)) + 0.5; ctx.moveTo(x0, y); ctx.lineTo(x1, y); });
+  ctx.stroke();
+  ctx.fillStyle = P.text; ctx.font = mono(11); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ty.list.forEach(v => ctx.fillText(fmt(v, 2), x0 - 6, Y(v)));
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("v in m/s", 4, gTop - 10);
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("Rohrlänge, Strömungsrichtung →", x0 + L / 2, h - 5);
+  if (m.ok) {
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    for (let i = 0; i <= 200; i++) ctx.lineTo(X(i / 200), Y(m.vAt(i / 200)));
+    ctx.lineTo(X(1), Y(0)); ctx.closePath();
+    ctx.fillStyle = C.fluid; ctx.fill();
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) ctx.lineTo(X(i / 200), Y(m.vAt(i / 200)));
+    ctx.strokeStyle = C.line; ctx.lineWidth = 2.5; ctx.stroke();
+  }
+  ctx.strokeStyle = P.gridStrong; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x0 + 0.5, gTop); ctx.lineTo(x0 + 0.5, gBot);
+  ctx.moveTo(x0, gBot + 0.5); ctx.lineTo(x1, gBot + 0.5);
+  ctx.stroke();
+}
+
+/* Animation */
+let sgRaf = null, sgLast = 0;
+function sgLoop(ts) {
+  if (!sgState.playing) return;
+  const dt = sgLast ? Math.min(0.05, (ts - sgLast) / 1000) : 0;
+  sgLast = ts;
+  sgState.t += dt * sgState.speed;
+  drawSG();
+  sgRaf = requestAnimationFrame(sgLoop);
+}
+function sgPlay(on) {
+  sgState.playing = on;
+  sgLast = 0;
+  if (sgRaf) cancelAnimationFrame(sgRaf);
+  sgRaf = on ? requestAnimationFrame(sgLoop) : null;
+  $id("sgPlayBtn").textContent = on ? "Pause" : (sgState.t > 0 ? "Weiter" : "Start");
+}
+$id("sgPlayBtn").addEventListener("click", () => sgPlay(!sgState.playing));
+document.querySelectorAll("[data-sgspeed]").forEach(b => b.addEventListener("click", () => {
+  sgState.speed = Number(b.dataset.sgspeed);
+  document.querySelectorAll("[data-sgspeed]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  drawSG();
+}));
+$id("tPakete").addEventListener("click", (e) => {
+  sgState.pakete = !sgState.pakete;
+  e.currentTarget.setAttribute("aria-pressed", String(sgState.pakete));
+  drawSG();
+});
+
+/* Eingaben */
+function setGiven(g) {
+  sgState.given = g;
+  document.querySelectorAll("#sgGiven [data-given]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.given === g)));
+  $id("sgViaQ").hidden = g !== "q";
+  $id("sgViaV").hidden = g !== "v";
+  updateSG();
+}
+function setQUnit(unit) {
+  sgState.unit = unit;
+  document.querySelectorAll("#sgUnit [data-qunit]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.qunit === unit)));
+  $id("qUnitLbl").textContent = Q_UNITS[unit].lbl;
+  updateSG();
+}
+document.querySelectorAll("#sgGiven [data-given]").forEach(b => b.addEventListener("click", () => setGiven(b.dataset.given)));
+document.querySelectorAll("#sgUnit [data-qunit]").forEach(b => b.addEventListener("click", () => setQUnit(b.dataset.qunit)));
+["inQ", "inV1", "inD1", "inD2"].forEach(id => $id(id).addEventListener("input", updateSG));
+$id("useD2").addEventListener("change", updateSG);
+
+const SG_PRESETS = {
+  rohr:      { given: "q", unit: "m3h",  q: 2.4, d1: 32, two: false, d2: 16 },
+  duese:     { given: "q", unit: "lmin", q: 40,  d1: 25, two: true,  d2: 12 },
+  hydraulik: { given: "q", unit: "lmin", q: 30,  d1: 20, two: true,  d2: 10 }
+};
+document.querySelectorAll("[data-sgpreset]").forEach(b => b.addEventListener("click", () => {
+  const pr = SG_PRESETS[b.dataset.sgpreset];
+  $id("inQ").value = pr.q; $id("inD1").value = pr.d1; $id("inD2").value = pr.d2;
+  $id("useD2").checked = pr.two;
+  setQUnit(pr.unit); setGiven(pr.given);
+}));
+
+function exportSG() {
+  const c = $id("sgchart");
+  const P = pal();
+  const pad = 24;
+  const d = sgCompute();
+  const out = document.createElement("canvas");
+  out.width = c.width + pad * 2;
+  out.height = c.height + pad * 2;
+  const ctx = out.getContext("2d");
+  ctx.fillStyle = P.bg;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(c, pad, pad);
+  ctx.fillStyle = P.text;
+  ctx.font = '13px "JetBrains Mono", ui-monospace, monospace';
+  ctx.fillText("Strömung Q = A · v · Q " + fmt(d.Q * 60000, 1) + " l/min · d₁ " + fmt(d.d1, 1) + " mm · v₁ " + fmt(d.v1, 2) + " m/s" +
+    (d.two ? " · d₂ " + fmt(d.d2, 1) + " mm · v₂ " + fmt(d.v2, 2) + " m/s" : ""), pad, out.height - 8);
+  out.toBlob(b => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = "stroemung-diagramm.png";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, "image/png");
+}
+
 /* ---------- Tabs ---------- */
+const TABS = {
+  wz: { hash: "#weg-zeit",  tag: "Weg-Zeit, Streckenzug" },
+  vf: { hash: "#vorschub",  tag: "Vorschub v_f = n · f" },
+  sg: { hash: "#stroemung", tag: "Strömung v = Q / A" }
+};
+let activeTab = "wz";
+function redrawActive() {
+  if (activeTab === "wz") renderCharts();
+  else if (activeTab === "vf") updateVF();
+  else updateSG();
+}
 function setTab(name) {
+  if (!TABS[name]) name = "wz";
+  activeTab = name;
   document.querySelectorAll(".tabs [role=tab]").forEach(t =>
     t.setAttribute("aria-selected", String(t.dataset.tab === name)));
-  $id("pane-wz").hidden = name !== "wz";
-  $id("pane-vf").hidden = name !== "vf";
-  $id("tabTag").textContent = name === "wz" ? "Weg-Zeit, Streckenzug" : "Vorschub v_f = n · f";
-  if (name === "wz") { drawST(); drawVT(); }
-  else { updateVF(); }
-  try { history.replaceState(null, "", name === "vf" ? "#vorschub" : "#weg-zeit"); } catch (e) {}
+  Object.keys(TABS).forEach(k => { $id("pane-" + k).hidden = k !== name; });
+  $id("tabTag").textContent = TABS[name].tag;
+  if (name !== "sg" && sgState.playing) sgPlay(false);
+  redrawActive();
+  if (name === "sg" && !sgState.playing && sgState.t === 0 && !reducedMotion) sgPlay(true);
+  try { history.replaceState(null, "", TABS[name].hash); } catch (e) {}
 }
+const tabFromHash = () => Object.keys(TABS).find(k => TABS[k].hash === location.hash) || "wz";
 document.querySelectorAll(".tabs [role=tab]").forEach(t =>
   t.addEventListener("click", () => setTab(t.dataset.tab)));
 
@@ -1343,10 +1821,7 @@ document.querySelectorAll(".tabs [role=tab]").forEach(t =>
 function renderCharts() { drawST(); drawVT(); }
 function render() { updateNumbers(); renderCharts(); }
 
-window.addEventListener("resize", () => {
-  if (!document.getElementById("pane-wz").hidden) renderCharts();
-  if (!document.getElementById("pane-vf").hidden) updateVF();
-});
+window.addEventListener("resize", redrawActive);
 
 try {
   const saved = localStorage.getItem("wz-theme");
@@ -1359,8 +1834,9 @@ bindHover("stWrap", "stTip", "st");
 bindHover("vtWrap", "vtTip", "vt");
 render();
 updateVF();
-setTab(location.hash === "#vorschub" ? "vf" : "wz");
-window.addEventListener("hashchange", () => setTab(location.hash === "#vorschub" ? "vf" : "wz"));
+updateSG();
+setTab(tabFromHash());
+window.addEventListener("hashchange", () => setTab(tabFromHash()));
 </script>
 </body>
 </html>

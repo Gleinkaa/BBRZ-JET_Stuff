@@ -29,7 +29,7 @@ BBRZ-JET_Stuff/
     └── rechenbuch_metall_uebungen_6-10.md  # Musterlösungen mit Rechenweg
 pyramid-volume.html        # Geometrie: Warum ist eine Pyramide genau ⅓? (eigenständige Seite, EN/DE)
 interaktive_weg_zeit_diagramm_physik_simulation.html # Kinematik: Interaktives Weg-Zeit-Diagramm Labor (s-t, v-t, a-t)
-weg-zeit-diagramm-streckenzug.html                  # Zwei Tabs: Streckenzug (s-t, Ø-Tempo) und Vorschub v_f = n · f
+weg-zeit-diagramm-streckenzug.html                  # Drei Tabs: Streckenzug (s-t, Ø-Tempo), Vorschub v_f = n · f, Strömung v = Q / A
 ```
 
 ---
@@ -136,7 +136,7 @@ Eigenständiges, interaktives Physik-Labor zur Veranschaulichung der Kinematik (
 
 ---
 
-## 6. Weg-Zeit und Vorschub (`weg-zeit-diagramm-streckenzug.html`, zwei Tabs)
+## 6. Weg-Zeit, Vorschub und Strömung (`weg-zeit-diagramm-streckenzug.html`, drei Tabs)
 
 ### Tab 1: Streckenzug und Durchschnittsgeschwindigkeit
 
@@ -145,7 +145,7 @@ Für Aufgaben der Form „3 min / 900 m, 4 min / 0 m, 2 min / 720 m — zeichne 
 * **Tabelle statt Regler:** Pro Abschnitt Dauer $\Delta t$ und Weg $\Delta s$ eintragen, Zeilen hinzufügen oder löschen. Ein Abschnitt mit 0 m ist ein Halt und wird als waagrechte Gerade gezeichnet.
 * **Live-Diagramme:** s-t-Diagramm mit Streckenzug, Sekante und Steigungsdreieck, darunter das v-t-Diagramm mit der Fläche $= $ Weg.
 * **Rechenweg im Klartext:** Zeiten addieren, Wege addieren, $\bar v = \sum \Delta s / \sum \Delta t$, Umrechnung auf km/h (Faktor 0,06). Die Kennwerte stehen zusätzlich als Kacheln über den Diagrammen.
-* **Direktlink je Tab:** `#weg-zeit` und `#vorschub` öffnen die Seite gleich im richtigen Tab.
+* **Direktlink je Tab:** `#weg-zeit`, `#vorschub` und `#stroemung` öffnen die Seite gleich im richtigen Tab.
 * **Bedienung:** Start/Pause mit Abspielmarke, 0,5×/1×/2×, Hover-Crosshair, Farbschema hell/dunkel, Diagramm als PNG, Druckansicht. Offline, keine externen Referenzen.
 
 Beispielwerte: 3 min/900 m, 4 min/0 m, 2 min/720 m ergeben $\sum \Delta t = 9$ min, $\sum \Delta s = 1620$ m und $\bar v = 180$ m/min $= 10{,}8$ km/h.
@@ -160,6 +160,17 @@ Derselbe Formelapparat wie in der Werkstattrechnung, für Fräsen und Drehen:
 
 Beispielwerte Fräsen: $v_c = 200$ m/min, $d = 10$ mm, $f_z = 0{,}05$ mm, $z = 4$, $L = 250$ mm ergeben
 $n = 6366$ 1/min, $f = 0{,}2$ mm/U, $v_f = 1273$ mm/min $= 1{,}27$ m/min und $t_h = 0{,}2$ min (11,8 s).
+
+### Tab 3: Strömungsgeschwindigkeit $v = Q / A$
+
+Kontinuitätsgleichung für ein Rohr mit Querschnittsänderung:
+* **Gegeben Q oder $v_1$:** Volumenstrom in l/min, l/s oder m³/h; alternativ $v_1$ in m/s, dann $Q = A_1 \cdot v_1$.
+* **Querschnitte:** $A = \pi \cdot d^2 / 4$ aus dem Innendurchmesser; der zweite Querschnitt $d_2$ ist per Checkbox abschaltbar (gerades Rohr).
+* **Geschwindigkeiten:** $v_1 = Q / A_1$, $v_2 = Q / A_2$, Probe über $v_2 = v_1 \cdot (d_1 / d_2)^2$. Funktioniert für Verengung und Erweiterung.
+* **Animation:** Teilchen strömen maßstäblich zueinander durch das Rohr, eingefärbte Volumenpakete gleichen Volumens werden in der Engstelle lang und schmal. Darunter $v$ über der Rohrlänge; im Bild steht der Zeitmaßstab (Zeitlupe 1 : …). Start/Pause, 0,5×/1×/2×; ohne `prefers-reduced-motion` startet sie beim Öffnen des Tabs. Gezeigt wird die mittlere Geschwindigkeit je Querschnitt, kein Strömungsprofil.
+
+Beispielwerte Düse: $Q = 40$ l/min, $d_1 = 25$ mm, $d_2 = 12$ mm ergeben $Q = 0{,}000667$ m³/s,
+$A_1 = 490{,}9$ mm², $v_1 = 1{,}36$ m/s, $A_2 = 113{,}1$ mm² und $v_2 = 5{,}89$ m/s (Faktor $(25/12)^2 = 4{,}34$).
 
 ---
 
