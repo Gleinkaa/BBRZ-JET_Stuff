@@ -24,7 +24,9 @@ BBRZ-JET_Stuff/
 │   └── lib/               # Three.js + OrbitControls, lokal eingebunden
 ├── excel/
 │   ├── generate_excel.py  # Erzeugt die Arbeitsmappe (openpyxl)
-│   └── Tiefziehen_Berechnungen_Uebungen_6-10.xlsx
+│   ├── Tiefziehen_Berechnungen_Uebungen_6-10.xlsx
+│   ├── generate_stroemung_excel.py              # Erzeugt die Strömungs-Mappe (openpyxl)
+│   └── Stroemung_Bewegungslehre_Aufgaben_4-7.xlsx
 └── docs/
     └── rechenbuch_metall_uebungen_6-10.md  # Musterlösungen mit Rechenweg
 pyramid-volume.html        # Geometrie: Warum ist eine Pyramide genau ⅓? (eigenständige Seite, EN/DE)
@@ -100,10 +102,24 @@ Neu erzeugen (benötigt `openpyxl`):
 
 ```bash
 pip install openpyxl
-python3 excel/generate_excel.py   # schreibt die .xlsx neben das Skript
+python3 excel/generate_excel.py            # Tiefziehen, schreibt die .xlsx neben das Skript
+python3 excel/generate_stroemung_excel.py  # Strömung / Bewegungslehre
 ```
 
-Die Datei enthält Formeln ohne vorberechnete Werte. Excel und LibreOffice rechnen beim Öffnen; reine Dateivorschauen zeigen die Ergebniszellen leer.
+Die Dateien enthalten Formeln ohne vorberechnete Werte. Excel und LibreOffice rechnen beim Öffnen; reine Dateivorschauen zeigen die Ergebniszellen leer.
+
+### Strömung und Bewegungslehre, Aufgaben 4–7
+
+[`Stroemung_Bewegungslehre_Aufgaben_4-7.xlsx`](excel/Stroemung_Bewegungslehre_Aufgaben_4-7.xlsx): Blatt „Formeln“ ($Q = \dot V = V/t = A \cdot v$, $v = Q/A$, Volumenkonstanz, Umrechnungen) und Blatt „Aufgaben 4-7“ mit Rechenweg je Zeile.
+
+| Aufgabe | Thema | Ergebnis |
+|---|---|---|
+| **4** | Öl, NW 400, 480 000 l/h | $Q = 0{,}1333$ m³/s, $A = 0{,}1257$ m² $\implies v = \mathbf{1{,}06}$ **m/s** |
+| **5** | Radar, 300 000 km/s, Echo nach 200 µs | Laufweg 60 km, hin und zurück $\implies$ Entfernung $\mathbf{30}$ **km** |
+| **6** | Strangpressen, 1,3 m/min, Profil 25 cm², Block Ø 300 × 600 mm | $V = 42{,}41$ dm³ $\implies$ a) $l = \mathbf{16{,}96}$ **m**, b) $t = \mathbf{13{,}05}$ **min**, c) $v_{St} = \mathbf{46{,}0}$ **mm/min** |
+| **7** | Draht 2,5 → 2 → 1,6 mm, Einlauf 2 m/s | $v_2 = \mathbf{3{,}125}$ **m/s**, $v_3 = \mathbf{4{,}883}$ **m/s** (Probe $A_1 v_1 = A_3 v_3$) |
+
+Aufgabe 4 und 7 rechnet auch der Strömungs-Tab im Formel-Labor (Beispiele „Aufg. 4“, „Aufg. 7/1“, „Aufg. 7/2“); 5 und 6 nur die Mappe.
 
 ---
 
@@ -164,13 +180,14 @@ $n = 6366$ 1/min, $f = 0{,}2$ mm/U, $v_f = 1273$ mm/min $= 1{,}27$ m/min und $t_
 ### Tab 3: Strömungsgeschwindigkeit $v = Q / A$
 
 Kontinuitätsgleichung für ein Rohr mit Querschnittsänderung:
-* **Gegeben Q oder $v_1$:** Volumenstrom in l/min, l/s oder m³/h; alternativ $v_1$ in m/s, dann $Q = A_1 \cdot v_1$.
+* **Gegeben Q oder $v_1$:** Volumenstrom in l/min, l/s, m³/h oder l/h; alternativ $v_1$ in m/s, dann $Q = A_1 \cdot v_1$.
 * **Querschnitte:** $A = \pi \cdot d^2 / 4$ aus dem Innendurchmesser; der zweite Querschnitt $d_2$ ist per Checkbox abschaltbar (gerades Rohr).
 * **Geschwindigkeiten:** $v_1 = Q / A_1$, $v_2 = Q / A_2$, Probe über $v_2 = v_1 \cdot (d_1 / d_2)^2$. Funktioniert für Verengung und Erweiterung.
 * **Animation:** Teilchen strömen maßstäblich zueinander durch das Rohr, eingefärbte Volumenpakete gleichen Volumens werden in der Engstelle lang und schmal. Darunter $v$ über der Rohrlänge; im Bild steht der Zeitmaßstab (Zeitlupe 1 : …). Start/Pause, 0,5×/1×/2×; ohne `prefers-reduced-motion` startet sie beim Öffnen des Tabs. Gezeigt wird die mittlere Geschwindigkeit je Querschnitt, kein Strömungsprofil.
+* **Beispiele:** Rohr, Düse, Hydraulik sowie „Aufg. 4“ (NW 400, 480 000 l/h → 1,061 m/s) und „Aufg. 7/1“, „Aufg. 7/2“ (Draht 2,5 → 2 → 1,6 mm: 3,125 und 4,883 m/s) vom Aufgabenblatt Bewegungslehre.
 
 Beispielwerte Düse: $Q = 40$ l/min, $d_1 = 25$ mm, $d_2 = 12$ mm ergeben $Q = 0{,}000667$ m³/s,
-$A_1 = 490{,}9$ mm², $v_1 = 1{,}36$ m/s, $A_2 = 113{,}1$ mm² und $v_2 = 5{,}89$ m/s (Faktor $(25/12)^2 = 4{,}34$).
+$A_1 = 490{,}9$ mm², $v_1 = 1{,}358$ m/s, $A_2 = 113{,}1$ mm² und $v_2 = 5{,}895$ m/s (Faktor $(25/12)^2 = 4{,}34$).
 
 ---
 

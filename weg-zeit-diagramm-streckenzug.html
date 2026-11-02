@@ -514,6 +514,7 @@
             <button class="seg" data-qunit="lmin" aria-pressed="true" type="button">l/min</button>
             <button class="seg" data-qunit="ls" aria-pressed="false" type="button">l/s</button>
             <button class="seg" data-qunit="m3h" aria-pressed="false" type="button">m³/h</button>
+            <button class="seg" data-qunit="lh" aria-pressed="false" type="button">l/h</button>
           </div>
         </div>
 
@@ -542,6 +543,9 @@
           <button class="seg" data-sgpreset="rohr" type="button">Rohr</button>
           <button class="seg" data-sgpreset="duese" type="button">Düse</button>
           <button class="seg" data-sgpreset="hydraulik" type="button">Hydraulik</button>
+          <button class="seg" data-sgpreset="a4" type="button">Aufg. 4</button>
+          <button class="seg" data-sgpreset="a7z1" type="button">Aufg. 7/1</button>
+          <button class="seg" data-sgpreset="a7z2" type="button">Aufg. 7/2</button>
         </div>
 
         <p class="note">Richtwerte für Rohrleitungen: Wasser 1 bis 3 m/s, Hydrauliköl in der Saugleitung 0,5 bis 1,5 m/s, in der Druckleitung 3 bis 6 m/s.</p>
@@ -1442,7 +1446,8 @@ const sgState = { given: "q", unit: "lmin", pakete: true, playing: false, speed:
 const Q_UNITS = {
   lmin: { lbl: "l/min", toSI: 1 / 60000, conv: "/ 60 000" },
   ls:   { lbl: "l/s",   toSI: 1 / 1000,  conv: "/ 1000" },
-  m3h:  { lbl: "m³/h",  toSI: 1 / 3600,  conv: "/ 3600" }
+  m3h:  { lbl: "m³/h",  toSI: 1 / 3600,  conv: "/ 3600" },
+  lh:   { lbl: "l/h",   toSI: 1 / 3600000, conv: "/ 3 600 000" }
 };
 const SG_BASE = 0.28;          // schnellste Stelle: Anteil der Rohrlänge je Sekunde bei 1×
 const SG_PAKET = 0.06;         // Paketlänge im langsamen Abschnitt, Anteil der Rohrlänge
@@ -1475,10 +1480,10 @@ function updateSG() {
 
   $id("sQ").innerHTML = fmt(d.Q * 60000, 1) + "<small>l/min</small>";
   $id("sQfoot").textContent = "= " + fmtSig(d.Q) + " m³/s = " + fmt(d.Q * 3600, 2) + " m³/h";
-  $id("sV1").innerHTML = fmt(d.v1, 2) + "<small>m/s</small>";
+  $id("sV1").innerHTML = fmt(d.v1, 3) + "<small>m/s</small>";
   $id("sV1foot").textContent = "A₁ = " + fmt(d.A1, 1) + " mm² bei d₁ = " + fmt(d.d1, 1) + " mm";
   if (d.two) {
-    $id("sV2").innerHTML = fmt(d.v2, 2) + "<small>m/s</small>";
+    $id("sV2").innerHTML = fmt(d.v2, 3) + "<small>m/s</small>";
     $id("sV2foot").textContent = "A₂ = " + fmt(d.A2, 1) + " mm² bei d₂ = " + fmt(d.d2, 1) + " mm";
     $id("sRatio").innerHTML = (d.v1 > 0 ? fmt(d.v2 / d.v1, 2) : "–") + "<small>× v₁</small>";
     $id("sRatioFoot").textContent = d.d2 > 0
@@ -1502,10 +1507,10 @@ function updateSG() {
       u.conv + " m³/s = " + fmtSig(d.Q) + " m³/s</code></div></li>");
     steps.push(areaStep("₁", d.d1, d.A1, A1m));
     steps.push("<li><div>Strömungsgeschwindigkeit: <code>v₁ = Q / A₁ = " + fmtSig(d.Q) + " m³/s / " + fmtSig(A1m) +
-      " m² = " + fmt(d.v1, 2) + " m/s</code></div></li>");
+      " m² = " + fmt(d.v1, 3) + " m/s</code></div></li>");
   } else {
     steps.push(areaStep("₁", d.d1, d.A1, A1m));
-    steps.push("<li><div>Volumenstrom: <code>Q = A₁ · v₁ = " + fmtSig(A1m) + " m² · " + fmt(d.v1In, 2) + " m/s = " +
+    steps.push("<li><div>Volumenstrom: <code>Q = A₁ · v₁ = " + fmtSig(A1m) + " m² · " + fmt(d.v1In, 3) + " m/s = " +
       fmtSig(d.Q) + " m³/s</code></div></li>");
     steps.push("<li><div>In Liter pro Minute: <code>Q = " + fmtSig(d.Q) + " m³/s · 60 000 = " + fmt(d.Q * 60000, 1) +
       " l/min</code></div></li>");
@@ -1514,10 +1519,10 @@ function updateSG() {
     steps.push(areaStep("₂", d.d2, d.A2, A2m));
     const flaeche = d.d2 < d.d1 ? "kleinere Fläche, schneller" : d.d2 > d.d1 ? "größere Fläche, langsamer" : "gleiche Fläche";
     steps.push("<li><div>Gleiches Q, " + flaeche + ": <code>v₂ = Q / A₂ = " + fmtSig(d.Q) + " m³/s / " + fmtSig(A2m) +
-      " m² = " + fmt(d.v2, 2) + " m/s</code></div></li>");
+      " m² = " + fmt(d.v2, 3) + " m/s</code></div></li>");
     if (d.d2 > 0) {
-      steps.push("<li><div>Probe mit der Kontinuitätsgleichung: <code>v₂ = v₁ · (d₁ / d₂)² = " + fmt(d.v1, 2) + " m/s · (" +
-        fmt(d.d1, 1) + " / " + fmt(d.d2, 1) + ")² = " + fmt(d.v2, 2) + " m/s</code></div></li>");
+      steps.push("<li><div>Probe mit der Kontinuitätsgleichung: <code>v₂ = v₁ · (d₁ / d₂)² = " + fmt(d.v1, 3) + " m/s · (" +
+        fmt(d.d1, 1) + " / " + fmt(d.d2, 1) + ")² = " + fmt(d.v2, 3) + " m/s</code></div></li>");
     }
   }
   $id("sgSteps").innerHTML = steps.join("");
@@ -1649,7 +1654,7 @@ function drawSG() {
     ctx.fillStyle = P.text; ctx.font = mono(12); ctx.textBaseline = "bottom";
     ctx.fillText("d" + s.i + " = " + fmt(s.dd, 1) + " mm", X(s.x), cy - r - 8);
     ctx.fillStyle = P.ink; ctx.font = "600 " + mono(13); ctx.textBaseline = "top";
-    ctx.fillText("v" + s.i + " = " + fmt(s.v, 2) + " m/s", X(s.x), cy + r + 8);
+    ctx.fillText("v" + s.i + " = " + fmt(s.v, 3) + " m/s", X(s.x), cy + r + 8);
   });
 
   // Kopfzeile im Bild: Paket-Legende und Zeitmaßstab
@@ -1755,13 +1760,20 @@ $id("useD2").addEventListener("change", updateSG);
 const SG_PRESETS = {
   rohr:      { given: "q", unit: "m3h",  q: 2.4, d1: 32, two: false, d2: 16 },
   duese:     { given: "q", unit: "lmin", q: 40,  d1: 25, two: true,  d2: 12 },
-  hydraulik: { given: "q", unit: "lmin", q: 30,  d1: 20, two: true,  d2: 10 }
+  hydraulik: { given: "q", unit: "lmin", q: 30,  d1: 20, two: true,  d2: 10 },
+  // Aufgaben-Blatt Bewegungslehre: 4) NW 400, 480 000 l Öl je Stunde; 7) Draht 2,5 → 2 → 1,6 mm, 2 m/s
+  a4:        { given: "q", unit: "lh",   q: 480000, d1: 400, two: false, d2: 200 },
+  a7z1:      { given: "v", v1: 2,     d1: 2.5, two: true, d2: 2 },
+  a7z2:      { given: "v", v1: 3.125, d1: 2,   two: true, d2: 1.6 }
 };
 document.querySelectorAll("[data-sgpreset]").forEach(b => b.addEventListener("click", () => {
   const pr = SG_PRESETS[b.dataset.sgpreset];
-  $id("inQ").value = pr.q; $id("inD1").value = pr.d1; $id("inD2").value = pr.d2;
+  if (pr.q !== undefined) $id("inQ").value = pr.q;
+  if (pr.v1 !== undefined) $id("inV1").value = pr.v1;
+  $id("inD1").value = pr.d1; $id("inD2").value = pr.d2;
   $id("useD2").checked = pr.two;
-  setQUnit(pr.unit); setGiven(pr.given);
+  if (pr.unit) setQUnit(pr.unit);
+  setGiven(pr.given);
 }));
 
 function exportSG() {
@@ -1778,8 +1790,8 @@ function exportSG() {
   ctx.drawImage(c, pad, pad);
   ctx.fillStyle = P.text;
   ctx.font = '13px "JetBrains Mono", ui-monospace, monospace';
-  ctx.fillText("Strömung Q = A · v · Q " + fmt(d.Q * 60000, 1) + " l/min · d₁ " + fmt(d.d1, 1) + " mm · v₁ " + fmt(d.v1, 2) + " m/s" +
-    (d.two ? " · d₂ " + fmt(d.d2, 1) + " mm · v₂ " + fmt(d.v2, 2) + " m/s" : ""), pad, out.height - 8);
+  ctx.fillText("Strömung Q = A · v · Q " + fmt(d.Q * 60000, 1) + " l/min · d₁ " + fmt(d.d1, 1) + " mm · v₁ " + fmt(d.v1, 3) + " m/s" +
+    (d.two ? " · d₂ " + fmt(d.d2, 1) + " mm · v₂ " + fmt(d.v2, 3) + " m/s" : ""), pad, out.height - 8);
   out.toBlob(b => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(b);

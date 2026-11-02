@@ -26,6 +26,9 @@ simulation/lib/three.min.js, simulation/lib/OrbitControls.js   lokal eingebunden
 simulation/preview.png, simulation/preview_start.png           Screenshots (Ende/Anfang des Hubs)
 excel/generate_excel.py        erzeugt die Arbeitsmappe (openpyxl)
 excel/Tiefziehen_Berechnungen_Uebungen_6-10.xlsx   Arbeitsmappe mit Formelblättern
+excel/generate_stroemung_excel.py                  erzeugt die Strömungs-Mappe (openpyxl)
+excel/Stroemung_Bewegungslehre_Aufgaben_4-7.xlsx   Strömung, Radar, Strangpressen, Drahtziehen (Aufgaben 4–7)
+weg-zeit-diagramm-streckenzug.html                 Formel-Labor, drei Tabs: #weg-zeit, #vorschub, #stroemung (animiert)
 docs/rechenbuch_metall_uebungen_6-10.md            Formeln + Musterlösungen mit Rechenweg
 README.md, LICENSE (MIT), .gitignore
 ```
