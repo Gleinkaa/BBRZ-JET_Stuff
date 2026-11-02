@@ -145,6 +145,7 @@ Für Aufgaben der Form „3 min / 900 m, 4 min / 0 m, 2 min / 720 m — zeichne 
 * **Tabelle statt Regler:** Pro Abschnitt Dauer $\Delta t$ und Weg $\Delta s$ eintragen, Zeilen hinzufügen oder löschen. Ein Abschnitt mit 0 m ist ein Halt und wird als waagrechte Gerade gezeichnet.
 * **Live-Diagramme:** s-t-Diagramm mit Streckenzug, Sekante und Steigungsdreieck, darunter das v-t-Diagramm mit der Fläche $= $ Weg.
 * **Rechenweg im Klartext:** Zeiten addieren, Wege addieren, $\bar v = \sum \Delta s / \sum \Delta t$, Umrechnung auf km/h (Faktor 0,06). Die Kennwerte stehen zusätzlich als Kacheln über den Diagrammen.
+* **Direktlink je Tab:** `#weg-zeit` und `#vorschub` öffnen die Seite gleich im richtigen Tab.
 * **Bedienung:** Start/Pause mit Abspielmarke, 0,5×/1×/2×, Hover-Crosshair, Farbschema hell/dunkel, Diagramm als PNG, Druckansicht. Offline, keine externen Referenzen.
 
 Beispielwerte: 3 min/900 m, 4 min/0 m, 2 min/720 m ergeben $\sum \Delta t = 9$ min, $\sum \Delta s = 1620$ m und $\bar v = 180$ m/min $= 10{,}8$ km/h.
@@ -153,7 +154,7 @@ Beispielwerte: 3 min/900 m, 4 min/0 m, 2 min/720 m ergeben $\sum \Delta t = 9$ m
 
 Derselbe Formelapparat wie in der Werkstattrechnung, für Fräsen und Drehen:
 * **Drehzahl:** wahlweise direkt, oder aus der Schnittgeschwindigkeit $n = v_c \cdot 1000 / (\pi \cdot d)$.
-* **Vorschub je Umdrehung:** beim Fräsen aus dem Zahnvorschub $f = f_z \cdot z$, beim Drehen direkt in mm/U.
+* **Vorschub je Umdrehung:** beim Fräsen aus dem Zahnvorschub $f = f_z \cdot z$; die Checkbox "Zähnezahl einbeziehen" schaltet die Zähnezahl ab, dann gilt $f = f_z$. Beim Drehen direkt in mm/U.
 * **Vorschubgeschwindigkeit:** $v_f = n \cdot f$ in mm/min und m/min, dazu die Hauptzeit $t_h = L / v_f$.
 * **Diagramm:** $v_f$ über $n$ mit Vergleichsgeraden für $f/2$ und $2f$, damit die Proportionalität sichtbar wird.
 
