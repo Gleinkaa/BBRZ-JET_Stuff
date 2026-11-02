@@ -29,6 +29,7 @@ BBRZ-JET_Stuff/
     └── rechenbuch_metall_uebungen_6-10.md  # Musterlösungen mit Rechenweg
 pyramid-volume.html        # Geometrie: Warum ist eine Pyramide genau ⅓? (eigenständige Seite, EN/DE)
 interaktive_weg_zeit_diagramm_physik_simulation.html # Kinematik: Interaktives Weg-Zeit-Diagramm Labor (s-t, v-t, a-t)
+weg-zeit-diagramm-streckenzug.html                  # Kinematik: Zeit-Weg-Werte, Streckenzug, Ø-Geschwindigkeit
 ```
 
 ---
@@ -132,6 +133,19 @@ Eigenständiges, interaktives Physik-Labor zur Veranschaulichung der Kinematik (
 * **Mehrstufige Bewegungen:** Einzelne Phasen (Stillstand, gleichförmige Bewegung $v = \text{const.}$, gleichmäßig beschleunigte Bewegung $a = \text{const.}$) konfigurieren und nahtlos aneinanderhängen.
 * **Kurvendiskussion & Zusammenhänge:** Steigungsdreiecke ($v = ds/dt$, $a = dv/dt$) und Flächenintegrale ($s = \int v\,dt$) interaktiv nachvollziehen.
 * **Live-Animation:** Synchronisierte Fahrzeug-Fahrspur zur Veranschaulichung von Momentangeschwindigkeit und Beschleunigung.
+
+---
+
+## 6. Streckenzug und Durchschnittsgeschwindigkeit (`weg-zeit-diagramm-streckenzug.html`)
+
+Für Aufgaben der Form „3 min / 900 m, 4 min / 0 m, 2 min / 720 m — zeichne das Weg-Zeit-Diagramm und berechne die Durchschnittsgeschwindigkeit“:
+
+* **Tabelle statt Regler:** Pro Abschnitt Dauer $\Delta t$ und Weg $\Delta s$ eintragen, Zeilen hinzufügen oder löschen. Ein Abschnitt mit 0 m ist ein Halt und wird als waagrechte Gerade gezeichnet.
+* **Live-Diagramme:** s-t-Diagramm mit Streckenzug, Sekante und Steigungsdreieck, darunter das v-t-Diagramm mit der Fläche $= $ Weg.
+* **Rechenweg im Klartext:** Zeiten addieren, Wege addieren, $\bar v = \sum \Delta s / \sum \Delta t$, Umrechnung auf km/h (Faktor 0,06). Die Kennwerte stehen zusätzlich als Kacheln über den Diagrammen.
+* **Bedienung:** Start/Pause mit Abspielmarke, 0,5×/1×/2×, Hover-Crosshair, Farbschema hell/dunkel, Diagramm als PNG, Druckansicht. Offline, keine externen Referenzen.
+
+Beispielwerte: 3 min/900 m, 4 min/0 m, 2 min/720 m ergeben $\sum \Delta t = 9$ min, $\sum \Delta s = 1620$ m und $\bar v = 180$ m/min $= 10{,}8$ km/h.
 
 ---
 
