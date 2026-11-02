@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Weg-Zeit-Diagramm: Streckenzug und Durchschnittsgeschwindigkeit</title>
+<title>Formel-Labor: Weg-Zeit-Diagramm und Vorschub</title>
 <style>
   :root{
     --background: oklch(1 0 0);
@@ -148,6 +148,38 @@
   }
   .note{ font-size:13px; color:var(--muted-foreground); margin:16px 0 0; }
   footer{ padding:0 24px 40px; max-width:1360px; margin:0 auto; color:var(--muted-foreground); font-size:13px; }
+  /* ---------- Tabs & Formularfelder ---------- */
+  .tabs{
+    display:inline-flex; gap:4px; padding:4px; border:1px solid var(--border);
+    border-radius:8px; background:var(--muted);
+  }
+  .tabs [role="tab"]{
+    height:34px; padding:0 14px; border:1px solid transparent; background:transparent;
+    border-radius:6px; font-size:14px; font-weight:500; color:var(--muted-foreground);
+  }
+  .tabs [role="tab"]:hover{ background:transparent; color:var(--foreground); }
+  .tabs [role="tab"][aria-selected="true"]{
+    background:var(--card); color:var(--foreground); border-color:var(--border);
+  }
+  main > .pane{ display:grid; gap:24px; }
+  .pane[hidden]{ display:none; }
+  .field{ display:grid; gap:6px; margin-bottom:14px; }
+  .field > label{ font-size:13px; font-weight:500; color:var(--muted-foreground); }
+  .field .row{ display:flex; align-items:center; gap:8px; }
+  .field input.num{ max-width:130px; }
+  .field .unit{
+    font-size:13px; color:var(--muted-foreground);
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+  }
+  .seg-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .seg-row.mb{ margin-bottom:16px; }
+  .k-table{ width:100%; font-size:13px; border-collapse:collapse; margin-top:4px; }
+  .k-table td{ padding:3px 0; color:var(--muted-foreground); }
+  .k-table td.v{
+    text-align:right; color:var(--foreground);
+    font-family:"JetBrains Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+  }
+
   /* ---------- Mobil ---------- */
   @media (max-width:1100px){
     .split{ grid-template-columns:minmax(0,1fr); }
@@ -155,6 +187,8 @@
   }
   @media (max-width:760px){
     main{ padding:16px; gap:16px; }
+    .tabs{ display:flex; width:100%; }
+    .tabs [role="tab"]{ flex:1; font-size:13px; padding:0 8px; }
     header.top{ height:auto; min-height:56px; padding:10px 16px; flex-wrap:wrap; }
     .brand h1{ font-size:16px; }
     .brand .tag{ display:none; }
@@ -178,8 +212,8 @@
 
 <header class="top">
   <div class="brand">
-    <h1>Weg-Zeit-Diagramm</h1>
-    <span class="tag">Streckenzug aus Zeit-Weg-Werten</span>
+    <h1>Formel-Labor</h1>
+    <span class="tag" id="tabTag">Weg-Zeit, Streckenzug</span>
   </div>
   <div class="top-actions">
     <button id="pngBtn" class="ghost" type="button">Diagramm als PNG</button>
@@ -189,6 +223,12 @@
 </header>
 
 <main>
+  <nav class="tabs" role="tablist" aria-label="Bereiche">
+    <button role="tab" id="tab-wz" data-tab="wz" aria-selected="true" aria-controls="pane-wz" type="button">Weg-Zeit</button>
+    <button role="tab" id="tab-vf" data-tab="vf" aria-selected="false" aria-controls="pane-vf" type="button">Vorschub v_f = n · f</button>
+  </nav>
+
+  <div class="pane" id="pane-wz" role="tabpanel" aria-labelledby="tab-wz">
   <section class="metrics" aria-label="Kennwerte">
     <div class="card">
       <p class="metric-label">Gesamtzeit Σ Δt</p>
@@ -300,7 +340,123 @@
     <p class="card-sub">Dieselben Schritte wie in der Tabelle, hier ausgeschrieben.</p>
     <ol class="steps" id="steps"></ol>
     <p class="note" id="note">Die Durchschnittsgeschwindigkeit ist nicht das Mittel der Abschnittsgeschwindigkeiten, sondern der Gesamtweg durch die Gesamtzeit. Ein Halt zählt mit, ohne Weg beizutragen.</p>
-  </section>
+  </div><!-- /pane-wz -->
+
+  <div class="pane" id="pane-vf" role="tabpanel" aria-labelledby="tab-vf" hidden>
+
+    <section class="metrics" aria-label="Kennwerte Vorschub">
+      <div class="card">
+        <p class="metric-label">Drehzahl n</p>
+        <div class="metric-val" id="vN">6366<small>1/min</small></div>
+        <p class="metric-foot" id="vNfoot">aus v_c = 200 m/min, d = 10 mm</p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Vorschub je Umdrehung f</p>
+        <div class="metric-val" id="vF">0,2<small>mm/U</small></div>
+        <p class="metric-foot" id="vFfoot">f_z = 0,05 mm · 4 Zähne</p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Vorschubgeschwindigkeit v_f</p>
+        <div class="metric-val" id="vVF">1273<small>mm/min</small></div>
+        <p class="metric-foot" id="vVFfoot">= 1,27 m/min</p>
+      </div>
+      <div class="card">
+        <p class="metric-label">Hauptzeit t_h</p>
+        <div class="metric-val" id="vTH">0,2<small>min</small></div>
+        <p class="metric-foot" id="vTHfoot">Weg L = 250 mm</p>
+      </div>
+    </section>
+
+    <div class="split">
+      <section class="card">
+        <h2>Eingaben</h2>
+        <p class="card-sub">Verfahren wählen, dann Drehzahl und Vorschub festlegen.</p>
+
+        <div class="seg-row mb" id="vfMode">
+          <button class="seg" data-mode="mill" aria-pressed="true" type="button">Fräsen</button>
+          <button class="seg" data-mode="turn" aria-pressed="false" type="button">Drehen</button>
+        </div>
+
+        <div class="seg-row mb" id="nSource">
+          <button class="seg" data-n="vc" aria-pressed="true" type="button">n aus v_c und d</button>
+          <button class="seg" data-n="direct" aria-pressed="false" type="button">n direkt</button>
+        </div>
+
+        <div id="nViaVc">
+          <div class="field">
+            <label for="inVc">Schnittgeschwindigkeit v_c</label>
+            <div class="row"><input id="inVc" class="num" type="number" step="5" min="0" value="200"><span class="unit">m/min</span></div>
+          </div>
+          <div class="field">
+            <label for="inD">Werkzeugdurchmesser d</label>
+            <div class="row"><input id="inD" class="num" type="number" step="1" min="0" value="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+
+        <div id="nViaDirect" hidden>
+          <div class="field">
+            <label for="inN">Drehzahl n</label>
+            <div class="row"><input id="inN" class="num" type="number" step="50" min="0" value="1200"><span class="unit">1/min</span></div>
+          </div>
+        </div>
+
+        <div id="fMilling">
+          <div class="field">
+            <label for="inFz">Vorschub je Zahn f_z</label>
+            <div class="row"><input id="inFz" class="num" type="number" step="0.01" min="0" value="0.05"><span class="unit">mm</span></div>
+          </div>
+          <div class="field">
+            <label for="inZ">Zähnezahl z</label>
+            <div class="row"><input id="inZ" class="num" type="number" step="1" min="1" value="4"><span class="unit">Zähne</span></div>
+          </div>
+        </div>
+
+        <div id="fTurning" hidden>
+          <div class="field">
+            <label for="inFr">Vorschub f</label>
+            <div class="row"><input id="inFr" class="num" type="number" step="0.05" min="0" value="0.25"><span class="unit">mm/U</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="inL">Weg L für die Hauptzeit</label>
+          <div class="row"><input id="inL" class="num" type="number" step="10" min="0" value="250"><span class="unit">mm</span></div>
+        </div>
+
+        <div class="presets">
+          <span class="lbl">Beispiele</span>
+          <button class="seg" data-vfpreset="mill" type="button">Fräsen</button>
+          <button class="seg" data-vfpreset="mill2" type="button">Schlichten</button>
+          <button class="seg" data-vfpreset="turn" type="button">Drehen</button>
+        </div>
+
+        <p class="note">Richtwerte Stahl S235: v_c 100 bis 250 m/min beim Fräsen, 150 bis 300 m/min beim Drehen, f_z 0,03 bis 0,15 mm, f 0,1 bis 0,5 mm/U. Die Werte hängen von Werkzeug und Schneidstoff ab.</p>
+      </section>
+
+      <section class="card">
+        <div class="chart-head">
+          <div>
+            <h2>v_f über n</h2>
+            <p class="card-sub" style="margin-bottom:0">v_f = n · f. Alle Geraden gehen durch den Ursprung, doppelte Drehzahl heißt doppelter Vorschub.</p>
+          </div>
+          <div class="toggles">
+            <button class="seg" id="tRef" aria-pressed="true" type="button">Vergleichsgeraden</button>
+          </div>
+        </div>
+        <div class="chartwrap" id="vfWrap">
+          <canvas id="vfchart" aria-label="Vorschubgeschwindigkeit über der Drehzahl"></canvas>
+          <div class="tip" id="vfTip"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Rechenweg</h2>
+      <p class="card-sub">Die Schritte in der Reihenfolge, in der sie aufs Papier kommen.</p>
+      <ol class="steps" id="vfSteps"></ol>
+      <p class="note">Einheiten prüfen: n in 1/min mal f in mm ergibt mm/min. Für m/min durch 1000 teilen. Die Hauptzeit ist Weg geteilt durch Vorschubgeschwindigkeit.</p>
+    </section>
+  </div>
 </main>
 
 <footer>
@@ -858,7 +1014,7 @@ document.getElementById("themeBtn").addEventListener("click", () => {
 /* ---------- Export ---------- */
 document.getElementById("printBtn").addEventListener("click", () => window.print());
 
-document.getElementById("pngBtn").addEventListener("click", () => {
+function exportWZ() {
   const c1 = document.getElementById("st"), c2 = document.getElementById("vt");
   const P = pal();
   const gap = 20, padX = 24;
@@ -881,13 +1037,295 @@ document.getElementById("pngBtn").addEventListener("click", () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }, "image/png");
+}
+
+function exportVF() {
+  const c = document.getElementById("vfchart");
+  const P = pal();
+  const pad = 24;
+  const d = vfCompute();
+  const out = document.createElement("canvas");
+  out.width = c.width + pad * 2;
+  out.height = c.height + pad * 2;
+  const ctx = out.getContext("2d");
+  ctx.fillStyle = P.bg;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(c, pad, pad);
+  ctx.fillStyle = P.text;
+  ctx.font = '13px "JetBrains Mono", ui-monospace, monospace';
+  ctx.fillText("Vorschub v_f = n · f · n " + fmt(d.n, 0) + " 1/min · f " + fmt(d.f, 2) + " mm/U · v_f " +
+    fmt(d.vf, 0) + " mm/min" + (d.th > 0 ? " · t_h " + fmt(d.th, 2) + " min" : ""), pad, out.height - 8);
+  out.toBlob(b => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = "vorschub-diagramm.png";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, "image/png");
+}
+
+document.getElementById("pngBtn").addEventListener("click", () => {
+  if (!document.getElementById("pane-vf").hidden) exportVF();
+  else exportWZ();
 });
+
+/* ---------- Vorschub: v_f = n * f ---------- */
+const vfState = { mode: "mill", nSource: "vc", ref: true };
+const $id = id => document.getElementById(id);
+const numVal = id => { const el = $id(id); const v = el ? Number(el.value) : 0; return isFinite(v) ? v : 0; };
+
+function vfCompute() {
+  const vc = numVal("inVc"), dmm = numVal("inD"), nDirect = numVal("inN");
+  const n = vfState.nSource === "vc" ? (dmm > 0 ? (vc * 1000) / (Math.PI * dmm) : 0) : nDirect;
+  const fz = numVal("inFz"), z = numVal("inZ"), fDirect = numVal("inFr");
+  const f = vfState.mode === "mill" ? fz * z : fDirect;
+  const L = numVal("inL");
+  const vf = n * f;
+  const th = vf > 0 ? L / vf : 0;
+  return { vc, dmm, nDirect, n, fz, z, fDirect, f, vf, L, th };
+}
+
+let vfGeom = null;
+
+function updateVF() {
+  const d = vfCompute();
+  const mill = vfState.mode === "mill";
+
+  $id("vN").innerHTML = fmt(d.n, 0) + "<small>1/min</small>";
+  $id("vNfoot").textContent = vfState.nSource === "vc"
+    ? "aus v_c = " + fmt(d.vc, 0) + " m/min, d = " + fmt(d.dmm, 1) + " mm"
+    : "direkt eingegeben";
+
+  $id("vF").innerHTML = fmt(d.f, 3) + "<small>mm/U</small>";
+  $id("vFfoot").textContent = mill
+    ? "f_z = " + fmt(d.fz, 2) + " mm · " + fmt(d.z, 0) + " Zähne"
+    : "direkt eingegeben";
+
+  $id("vVF").innerHTML = fmt(d.vf, 0) + "<small>mm/min</small>";
+  $id("vVFfoot").textContent = "= " + fmt(d.vf / 1000, 2) + " m/min";
+
+  $id("vTH").innerHTML = (d.th > 0 ? fmt(d.th, 2) : "0") + "<small>min</small>";
+  $id("vTHfoot").textContent = d.L > 0
+    ? (d.th > 0 ? "Weg L = " + fmt(d.L, 0) + " mm, das sind " + fmt(d.th * 60, 1) + " s" : "Weg L = " + fmt(d.L, 0) + " mm")
+    : "kein Weg angegeben";
+
+  const steps = [];
+  if (vfState.nSource === "vc") {
+    steps.push("<li><div>Drehzahl aus der Schnittgeschwindigkeit: <code>n = v_c · 1000 / (π · d) = " +
+      fmt(d.vc, 0) + " · 1000 / (π · " + fmt(d.dmm, 1) + ") = " + fmt(d.n, 0) + " 1/min</code></div></li>");
+  } else {
+    steps.push("<li><div>Drehzahl vorgegeben: <code>n = " + fmt(d.n, 0) + " 1/min</code></div></li>");
+  }
+  if (mill) {
+    steps.push("<li><div>Vorschub je Umdrehung aus dem Zahnvorschub: <code>f = f_z · z = " +
+      fmt(d.fz, 2) + " mm · " + fmt(d.z, 0) + " = " + fmt(d.f, 2) + " mm/U</code></div></li>");
+  } else {
+    steps.push("<li><div>Vorschub je Umdrehung vorgegeben: <code>f = " + fmt(d.f, 2) + " mm/U</code></div></li>");
+  }
+  steps.push("<li><div>Vorschubgeschwindigkeit: <code>v_f = n · f = " + fmt(d.n, 0) + " 1/min · " +
+    fmt(d.f, 2) + " mm = " + fmt(d.vf, 0) + " mm/min</code></div></li>");
+  steps.push("<li><div>In Meter umgerechnet: <code>" + fmt(d.vf, 0) + " mm/min / 1000 = " +
+    fmt(d.vf / 1000, 2) + " m/min</code></div></li>");
+  if (d.L > 0) {
+    steps.push("<li><div>Hauptzeit: <code>t_h = L / v_f = " + fmt(d.L, 0) + " mm / " + fmt(d.vf, 0) +
+      " mm/min = " + fmt(d.th, 2) + " min</code>" + (d.th > 0 ? ", das sind " + fmt(d.th * 60, 1) + " s" : "") + "</div></li>");
+  } else {
+    steps.push("<li><div>Hauptzeit: erst einen Weg L eintragen, dann <code>t_h = L / v_f</code></div></li>");
+  }
+  $id("vfSteps").innerHTML = steps.join("");
+  drawVF();
+}
+
+function drawVF() {
+  const canvas = $id("vfchart");
+  if (!canvas) return;
+  if (!canvas.getBoundingClientRect().width) { vfGeom = null; return; }
+  const { ctx, w, h } = setup(canvas);
+  const P = pal();
+  const d = vfCompute();
+  const pad = { l: 76, r: 18, t: 18, b: 44 };
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+
+  const nStepRaw = Math.max(d.n * 1.6, 800);
+  const nStep = niceStep(nStepRaw, 4);
+  const nMax = Math.ceil(nStepRaw / nStep) * nStep;
+  const fTop = d.f > 0 ? d.f * 2 : 1;
+  const vMaxRaw = nMax * fTop;
+  const vStep = niceStep(vMaxRaw, 4);
+  const vMax = Math.ceil(vMaxRaw / vStep) * vStep;
+
+  const X = n => pad.l + (n / nMax) * iw;
+  const Y = v => pad.t + ih - (v / vMax) * ih;
+
+  const tx = ticks(0, nMax, Math.max(3, Math.round(iw / 95)));
+  const ty = ticks(0, vMax, Math.max(3, Math.round(ih / 55)));
+  ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+  ctx.beginPath();
+  tx.list.forEach(v => { const x = Math.round(X(v)) + 0.5; ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ih); });
+  ty.list.forEach(v => { const y = Math.round(Y(v)) + 0.5; ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + iw, y); });
+  ctx.stroke();
+
+  // Vergleichsgeraden
+  if (vfState.ref && d.f > 0) {
+    [0.5, 2].forEach(mult => {
+      ctx.save();
+      ctx.strokeStyle = P.text;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash(mult === 0.5 ? [6, 5] : [2, 4]);
+      ctx.beginPath();
+      ctx.moveTo(X(0), Y(0));
+      ctx.lineTo(X(nMax), Y(nMax * d.f * mult));
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  // Achsen
+  ctx.strokeStyle = P.gridStrong;
+  ctx.beginPath();
+  ctx.moveTo(pad.l + 0.5, pad.t); ctx.lineTo(pad.l + 0.5, pad.t + ih);
+  ctx.moveTo(pad.l, pad.t + ih + 0.5); ctx.lineTo(pad.l + iw, pad.t + ih + 0.5);
+  ctx.stroke();
+
+  // Hauptgerade f
+  if (d.f > 0) {
+    ctx.strokeStyle = P.ink;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    ctx.lineTo(X(nMax), Y(nMax * d.f));
+    ctx.stroke();
+  }
+
+  // Beschriftung
+  ctx.fillStyle = P.text;
+  ctx.font = '12px "JetBrains Mono", ui-monospace, monospace';
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  tx.list.forEach(v => ctx.fillText(fmt(v, 0), X(v), pad.t + ih + 8));
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ty.list.forEach(v => ctx.fillText(fmt(v, 0), pad.l - 8, Y(v)));
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("Drehzahl n in 1/min", pad.l + iw / 2, h - 6);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("v_f in mm/min", 4, pad.t - 4);
+
+  // aktueller Punkt
+  if (d.vf > 0 && d.n <= nMax * 1.02) {
+    ctx.save();
+    ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.moveTo(X(d.n), Y(d.vf)); ctx.lineTo(X(d.n), pad.t + ih);
+    ctx.stroke();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(X(d.n), Y(d.vf), 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = P.ink; ctx.fill();
+    ctx.beginPath();
+    ctx.arc(X(d.n), Y(d.vf), 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = P.bg; ctx.fill();
+
+    const label = fmt(d.n, 0) + " 1/min · " + fmt(d.vf, 0) + " mm/min";
+    ctx.font = '12px "JetBrains Mono", ui-monospace, monospace';
+    ctx.textAlign = X(d.n) > pad.l + iw * 0.6 ? "right" : "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = P.ink;
+    ctx.fillText(label, X(d.n) + (ctx.textAlign === "right" ? -10 : 10), Y(d.vf) - 8);
+  }
+
+  vfGeom = { pad, iw, ih, nMax, vMax, X, Y, d };
+}
+
+/* Auswahl-Verhalten */
+function setMode(mode) {
+  vfState.mode = mode;
+  document.querySelectorAll("#vfMode [data-mode]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $id("fMilling").hidden = mode !== "mill";
+  $id("fTurning").hidden = mode !== "turn";
+  updateVF();
+}
+function setNSource(src) {
+  vfState.nSource = src;
+  document.querySelectorAll("#nSource [data-n]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.n === src)));
+  $id("nViaVc").hidden = src !== "vc";
+  $id("nViaDirect").hidden = src !== "direct";
+  updateVF();
+}
+
+document.querySelectorAll("#vfMode [data-mode]").forEach(b =>
+  b.addEventListener("click", () => setMode(b.dataset.mode)));
+document.querySelectorAll("#nSource [data-n]").forEach(b =>
+  b.addEventListener("click", () => setNSource(b.dataset.n)));
+
+$id("tRef").addEventListener("click", (e) => {
+  vfState.ref = !vfState.ref;
+  e.currentTarget.setAttribute("aria-pressed", String(vfState.ref));
+  drawVF();
+});
+
+["inVc", "inD", "inN", "inFz", "inZ", "inFr", "inL"].forEach(id => {
+  const el = $id(id);
+  if (el) el.addEventListener("input", updateVF);
+});
+
+const VF_PRESETS = {
+  mill:  { mode: "mill", nSource: "vc", vc: 200, d: 10, fz: 0.05, z: 4, L: 250 },
+  mill2: { mode: "mill", nSource: "vc", vc: 320, d: 6,  fz: 0.02, z: 3, L: 180 },
+  turn:  { mode: "turn", nSource: "vc", vc: 250, d: 40, f: 0.25, L: 120 }
+};
+document.querySelectorAll("[data-vfpreset]").forEach(b => {
+  b.addEventListener("click", () => {
+    const pr = VF_PRESETS[b.dataset.vfpreset];
+    $id("inVc").value = pr.vc; $id("inD").value = pr.d; $id("inL").value = pr.L;
+    if (pr.mode === "mill") { $id("inFz").value = pr.fz; $id("inZ").value = pr.z; }
+    else { $id("inFr").value = pr.f; }
+    setMode(pr.mode); setNSource(pr.nSource);
+  });
+});
+
+/* Hover im v_f-Diagramm */
+(function bindVFHover() {
+  const canvas = $id("vfchart"), tip = $id("vfTip");
+  const move = (ev) => {
+    const g = vfGeom;
+    if (!g) { tip.classList.remove("show"); return; }
+    const rect = canvas.getBoundingClientRect();
+    const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+    const n = Math.max(0, Math.min(g.nMax, ((px - g.pad.l) / g.iw) * g.nMax));
+    tip.innerHTML = '<span class="k">n</span> ' + fmt(n, 0) + ' 1/min · <span class="k">v_f</span> ' +
+      fmt(n * g.d.f, 0) + ' mm/min (' + fmt(n * g.d.f / 1000, 2) + ' m/min)';
+    tip.style.left = Math.max(80, Math.min(rect.width - 80, px)) + "px";
+    tip.style.top = "22px";
+    tip.classList.add("show");
+  };
+  canvas.addEventListener("mousemove", move);
+  canvas.addEventListener("mouseleave", () => tip.classList.remove("show"));
+  canvas.addEventListener("touchmove", move, { passive: true });
+  canvas.addEventListener("touchend", () => tip.classList.remove("show"));
+})();
+
+/* ---------- Tabs ---------- */
+function setTab(name) {
+  document.querySelectorAll(".tabs [role=tab]").forEach(t =>
+    t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  $id("pane-wz").hidden = name !== "wz";
+  $id("pane-vf").hidden = name !== "vf";
+  $id("tabTag").textContent = name === "wz" ? "Weg-Zeit, Streckenzug" : "Vorschub v_f = n · f";
+  if (name === "wz") { drawST(); drawVT(); }
+  else { updateVF(); }
+}
+document.querySelectorAll(".tabs [role=tab]").forEach(t =>
+  t.addEventListener("click", () => setTab(t.dataset.tab)));
 
 /* ---------- Init ---------- */
 function renderCharts() { drawST(); drawVT(); }
 function render() { updateNumbers(); renderCharts(); }
 
-window.addEventListener("resize", () => { renderCharts(); });
+window.addEventListener("resize", () => {
+  if (!document.getElementById("pane-wz").hidden) renderCharts();
+  if (!document.getElementById("pane-vf").hidden) updateVF();
+});
 
 try {
   const saved = localStorage.getItem("wz-theme");
@@ -899,6 +1337,8 @@ buildTable();
 bindHover("stWrap", "stTip", "st");
 bindHover("vtWrap", "vtTip", "vt");
 render();
+updateVF();
+setTab("wz");
 </script>
 </body>
 </html>
